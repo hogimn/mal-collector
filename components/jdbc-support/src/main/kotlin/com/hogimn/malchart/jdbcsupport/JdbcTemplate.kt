@@ -93,6 +93,18 @@ class JdbcTemplate(val dataSource: DataSource) {
     fun <T> findBy(sql: String, mapper: (ResultSet) -> T, vararg params: Any) =
         query(sql, { ps -> bindParams(ps, params) }, mapper)
 
+    fun update(sql: String, vararg params: Any): Int =
+        dataSource.connection.use { connection ->
+            update(connection, sql, *params)
+        }
+
+    fun update(connection: Connection, sql: String, vararg params: Any): Int {
+        return connection.prepareStatement(sql).use { statement ->
+            bindParams(statement, params)
+            statement.executeUpdate()
+        }
+    }
+
     /// USED FOR TESTING
 
     fun execute(sql: String) {

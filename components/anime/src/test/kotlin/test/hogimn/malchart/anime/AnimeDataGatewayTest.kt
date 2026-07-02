@@ -89,4 +89,45 @@ class AnimeDataGatewayTest {
         assertEquals(2026, result.year)
         assertEquals("Sci-Fi", result.genre)
     }
+
+    @Test
+    fun testUpdate() {
+        val testId = 5555
+        val nowTime = LocalDateTime.now().withNano(0)
+
+        gateway.create(
+            id = testId, title = "Original Title", link = "https://link.com", image = "img.jpg",
+            score = 7.0, members = 1000, genre = "Action", studios = "A-1 Pictures",
+            source = "Manga", season = "SPRING", year = 2026, rank = 50, popularity = 500,
+            scoringCount = 800, episodes = 12, airStatus = "AIRING", type = "TV",
+            startDate = nowTime, endDate = nowTime, englishTitle = "Original Title",
+            japaneseTitle = "オリジナル", synopsis = "Original synopsis.",
+            createdAt = nowTime, updatedAt = nowTime, largeImage = "large_img.jpg",
+            rating = "PG-13", nsfw = "SAFE"
+        )
+
+        val updatedTime = nowTime.plusHours(1)
+        val updatedRows = gateway.update(
+            id = testId, title = "Updated Title", link = "https://link.com", image = "img.jpg",
+            score = 9.0, members = 1000, genre = "Action", studios = "A-1 Pictures",
+            source = "Manga", season = "SPRING", year = 2026, rank = 50, popularity = 500,
+            scoringCount = 800, episodes = 12, airStatus = "AIRING", type = "TV",
+            startDate = nowTime, endDate = nowTime, englishTitle = "Original Title",
+            japaneseTitle = "オリジナル", synopsis = "This is an updated synopsis.",
+            createdAt = nowTime, updatedAt = updatedTime, largeImage = "large_img.jpg",
+            rating = "PG-13", nsfw = "SAFE"
+        )
+
+        assertEquals(1, updatedRows)
+
+        val updatedRecord = gateway.findObject(testId)
+
+        assertNotNull(updatedRecord)
+        assertEquals("Updated Title", updatedRecord.title)
+        assertEquals(9.0, updatedRecord.score)
+        assertEquals("This is an updated synopsis.", updatedRecord.synopsis)
+        assertEquals(updatedTime, updatedRecord.updatedAt)
+        assertEquals("SPRING", updatedRecord.season)
+        assertEquals(2026, updatedRecord.year)
+    }
 }

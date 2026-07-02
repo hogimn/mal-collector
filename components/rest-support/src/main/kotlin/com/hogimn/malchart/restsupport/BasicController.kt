@@ -18,6 +18,10 @@ abstract class BasicController {
         return respond(exchange, "POST", uri, supportedMediaTypes, 201, block)
     }
 
+    protected fun put(exchange: HttpExchange, uri: String, supportedMediaTypes: List<String>, block: () -> String): Boolean {
+        return respond(exchange, "PUT", uri, supportedMediaTypes, 200, block)
+    }
+
     private fun respond(exchange: HttpExchange, method: String, uri: String, supportedMediaTypes: List<String>, successStatus: Int, block: () -> String): Boolean {
         val acceptedMediaType = exchange.requestHeaders.getFirst("Accept")
 

@@ -138,4 +138,55 @@ class AnimeControllerTest : TestControllerSupport() {
         assertEquals("SFW", record.nsfw)
         assertEquals("anime info", record.info)
     }
+
+    @Test
+    fun testUpdate() {
+        TestScenarioSupport(dataSource).loadTestScenario("jacks-test-scenario")
+
+        val updateData = AnimeInfo(
+            id = 4765,
+            title = "Attack on Titan - Updated",
+            link = "https://example.com/anime/4765-updated",
+            image = "https://example.com/img/4765.jpg",
+            score = 9.55, // 스코어 변경
+            members = 2600000,
+            genre = "Action, Fantasy, Drama",
+            studios = "WIT Studio",
+            source = "Manga",
+            season = "SPRING",
+            year = 2013,
+            rank = 1,
+            popularity = 1,
+            scoringCount = 1900000,
+            episodes = 25,
+            airStatus = "Finished Airing",
+            type = "TV",
+            startDate = LocalDateTime.of(2013, 4, 7, 0, 0, 0),
+            endDate = LocalDateTime.of(2013, 9, 29, 0, 0, 0),
+            englishTitle = "Attack on Titan",
+            japaneseTitle = "Shingeki no Kyojin",
+            synopsis = "Centuries ago, mankind was slaughtered...",
+            createdAt = LocalDateTime.of(2026, 6, 28, 21, 0, 0),
+            updatedAt = LocalDateTime.of(2026, 6, 28, 21, 0, 0),
+            largeImage = "https://example.com/img/4765_large.jpg",
+            rating = "R - 17+",
+            nsfw = "SFW",
+            info = "anime info"
+        )
+
+        val requestBody = mapper.writeValueAsString(updateData)
+
+        val response = template.put("http://localhost:8081/anime", "application/json", requestBody)
+
+        val expectedResponse = """{"result": "success", "updatedRows": 1}"""
+        assertEquals(expectedResponse, response)
+
+        val idParam = Pair("animeId", "4765")
+        val getResponse = template.get("http://localhost:8081/anime", "application/json", idParam)
+        val actual: AnimeInfo = mapper.readValue(getResponse, object : TypeReference<AnimeInfo>() {})
+
+        assertEquals("Attack on Titan - Updated", actual.title)
+        assertEquals(9.55, actual.score)
+        assertEquals(1, actual.rank)
+    }
 }

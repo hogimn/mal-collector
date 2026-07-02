@@ -24,6 +24,48 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) :
             val records = gateway.findByYearAndSeason(year, season)
             val animeInfoList = records.map { it.toAnimeInfo() }
             mapper.writeValueAsString(animeInfoList)
+        } || put(
+            exchange,
+            "/anime",
+            listOf("application/json", "application/vnd.malchart.v1+json")
+        ) {
+            val updateData = mapper.readValue(body(exchange), AnimeInfo::class.java)
+
+            val updatedRows = gateway.update(
+                id = updateData.id,
+                title = updateData.title,
+                link = updateData.link,
+                image = updateData.image,
+                score = updateData.score,
+                members = updateData.members,
+                genre = updateData.genre,
+                studios = updateData.studios,
+                source = updateData.source,
+                season = updateData.season,
+                year = updateData.year,
+                rank = updateData.rank,
+                popularity = updateData.popularity,
+                scoringCount = updateData.scoringCount,
+                episodes = updateData.episodes,
+                airStatus = updateData.airStatus,
+                type = updateData.type,
+                startDate = updateData.startDate,
+                endDate = updateData.endDate,
+                englishTitle = updateData.englishTitle,
+                japaneseTitle = updateData.japaneseTitle,
+                synopsis = updateData.synopsis,
+                createdAt = updateData.createdAt,
+                updatedAt = java.time.LocalDateTime.now(),
+                largeImage = updateData.largeImage,
+                rating = updateData.rating,
+                nsfw = updateData.nsfw
+            )
+
+            if (updatedRows > 0) {
+                """{"result": "success", "updatedRows": $updatedRows}"""
+            } else {
+                throw IllegalStateException("Anime with id ${updateData.id} not found to update")
+            }
         }
     }
 

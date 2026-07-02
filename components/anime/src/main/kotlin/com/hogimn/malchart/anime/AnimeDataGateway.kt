@@ -1,11 +1,8 @@
 package com.hogimn.malchart.anime
 
 import com.hogimn.malchart.jdbcsupport.JdbcTemplate
-import java.sql.Connection
 import java.sql.ResultSet
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Date
 
 class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
     private val createSql = """
@@ -14,6 +11,16 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
             `rank`, popularity, scoring_count, episodes, air_status, type, start_date, end_date, 
             english_title, japanese_title, synopsis, created_at, updated_at, large_image, rating, nsfw
         ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """.trimIndent()
+
+    private val updateSql = """
+        update anime set
+            title = ?, link = ?, image = ?, score = ?, members = ?, genre = ?, studios = ?, 
+            source = ?, season = ?, year = ?, `rank` = ?, popularity = ?, scoring_count = ?, 
+            episodes = ?, air_status = ?, type = ?, start_date = ?, end_date = ?, 
+            english_title = ?, japanese_title = ?, synopsis = ?, created_at = ?, updated_at = ?, 
+            large_image = ?, rating = ?, nsfw = ?
+        where id = ?
     """.trimIndent()
 
     private val selectSql = """
@@ -45,25 +52,20 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
         )
     }
 
-    fun create(
-        connection: Connection,
+    fun update(
         id: Int, title: String, link: String, image: String, score: Double, members: Int,
         genre: String, studios: String, source: String, season: String, year: Int,
         rank: Int, popularity: Int, scoringCount: Int, episodes: Int, airStatus: String,
         type: String, startDate: LocalDateTime, endDate: LocalDateTime, englishTitle: String, japaneseTitle: String,
         synopsis: String, createdAt: LocalDateTime, updatedAt: LocalDateTime, largeImage: String,
         rating: String, nsfw: String
-    ): AnimeRecord {
-        return jdbcTemplate.create(
-            connection, createSql, {
-                AnimeRecord(
-                    id, title, link, image, score, members, genre, studios, source, season, year,
-                    rank, popularity, scoringCount, episodes, airStatus, type, startDate, endDate,
-                    englishTitle, japaneseTitle, synopsis, createdAt, updatedAt, largeImage, rating, nsfw
-                )
-            }, id, title, link, image, score, members, genre, studios, source, season, year,
+    ): Int {
+        return jdbcTemplate.update(
+            updateSql,
+            title, link, image, score, members, genre, studios, source, season, year,
             rank, popularity, scoringCount, episodes, airStatus, type, startDate, endDate,
-            englishTitle, japaneseTitle, synopsis, createdAt, updatedAt, largeImage, rating, nsfw
+            englishTitle, japaneseTitle, synopsis, createdAt, updatedAt, largeImage, rating, nsfw,
+            id
         )
     }
 
@@ -114,5 +116,4 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
             nsfw = rs.getString("nsfw")
         )
     }
-
 }

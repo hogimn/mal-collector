@@ -31,6 +31,15 @@ class RestTemplate {
         return execute(request)
     }
 
+    fun put(endpoint: String, accept: String, data: String): String {
+        val request = HttpRequest.newBuilder(URI(endpoint))
+            .header("Accept", accept)
+            .header("Content-Type", "application/json")
+            .PUT(HttpRequest.BodyPublishers.ofString(data))
+            .build()
+        return execute(request)
+    }
+
     private fun execute(request: HttpRequest): String {
         val response = client.send(request, HttpResponse.BodyHandlers.ofString())
         if (response.statusCode() >= 300) {
