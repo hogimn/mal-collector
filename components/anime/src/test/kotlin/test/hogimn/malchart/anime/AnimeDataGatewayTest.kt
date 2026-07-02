@@ -39,48 +39,35 @@ class AnimeDataGatewayTest {
         assertEquals(testId, createdRecord.id)
         assertEquals("For the Sake of Sita", createdRecord.title)
 
-        val actual = template.query(
-            "select id, title, score, season, year, synopsis from anime where id = ?",
-            { ps -> ps.setInt(1, testId) },
-            { rs ->
-                listOf(
-                    rs.getInt("id"),
-                    rs.getString("title"),
-                    rs.getDouble("score"),
-                    rs.getString("season"),
-                    rs.getInt("year"),
-                    rs.getString("synopsis")
-                )
-            }
-        ).firstOrNull()
+        val actual = gateway.findObject(testId)
 
-        assertNotNull(actual, "Data was not normally saved in the DB.")
-        assertEquals(testId, actual[0])
-        assertEquals("For the Sake of Sita", actual[1])
-        assertEquals(9.5, actual[2])
-        assertEquals("SUMMER", actual[3])
-        assertEquals(2026, actual[4])
-        assertEquals("A mystical fantasy romance story.", actual[5])
+        assertNotNull(actual)
+        assertEquals(testId, actual.id)
+        assertEquals("For the Sake of Sita", actual.title)
+        assertEquals(9.5, actual.score)
+        assertEquals("SUMMER", actual.season)
+        assertEquals(2026, actual.year)
+        assertEquals("A mystical fantasy romance story.", actual.synopsis)
     }
 
     @Test
     fun testFindBy() {
         val testId = 7777
-        val insertSql = """
-        insert into anime (
-            id, title, link, image, score, members, genre, studios, source, season, year, 
-            `rank`, popularity, scoring_count, episodes, air_status, type, start_date, end_date, 
-            english_title, japanese_title, synopsis, created_at, updated_at, large_image, rating, nsfw
-        ) values (${testId}, 'Test Anime', '#', '#', 8.8, 500, 'Sci-Fi', 'Trigger', 'Original', 'WINTER', 2026, 
-                 10, 50, 450, 24, 'AIRING', 'TV', NOW(), NOW(), 'Test Anime', 'テスト', 'Synopsis text', NOW(), NOW(), '#', 'R', 'SAFE')
-    """.trimIndent()
+        val nowTime = LocalDateTime.now()
 
-        template.execute(insertSql)
+        gateway.create(
+            id = testId, title = "Test Anime", link = "#", image = "#",
+            score = 8.8, members = 500, genre = "Sci-Fi", studios = "Trigger",
+            source = "Original", season = "WINTER", year = 2026, rank = 10, popularity = 50,
+            scoringCount = 450, episodes = 24, airStatus = "AIRING", type = "TV",
+            startDate = nowTime, endDate = nowTime, englishTitle = "Test Anime",
+            japaneseTitle = "テスト", synopsis = "Synopsis text",
+            largeImage = "#", rating = "R", nsfw = "SAFE"
+        )
 
         val result = gateway.findObject(testId)
 
         assertNotNull(result)
-
         assertEquals(testId, result.id)
         assertEquals("Test Anime", result.title)
         assertEquals(8.8, result.score)
@@ -92,7 +79,7 @@ class AnimeDataGatewayTest {
     @Test
     fun testUpdate() {
         val testId = 5555
-        val nowTime = LocalDateTime.now().withNano(0)
+        val nowTime = LocalDateTime.now()
 
         gateway.create(
             id = testId, title = "Original Title", link = "https://link.com", image = "img.jpg",
@@ -104,13 +91,17 @@ class AnimeDataGatewayTest {
             largeImage = "large_img.jpg", rating = "PG-13", nsfw = "SAFE"
         )
 
+        val updatedTitle = "Updated Title"
+        val updatedScore = 9.0
+        val updatedSynopsis = "This is an updated synopsis."
+
         val updatedRows = gateway.update(
-            id = testId, title = "Updated Title", link = "https://link.com", image = "img.jpg",
-            score = 9.0, members = 1000, genre = "Action", studios = "A-1 Pictures",
+            id = testId, title = updatedTitle, link = "https://link.com", image = "img.jpg",
+            score = updatedScore, members = 1000, genre = "Action", studios = "A-1 Pictures",
             source = "Manga", season = "SPRING", year = 2026, rank = 50, popularity = 500,
             scoringCount = 800, episodes = 12, airStatus = "AIRING", type = "TV",
             startDate = nowTime, endDate = nowTime, englishTitle = "Original Title",
-            japaneseTitle = "オリジナル", synopsis = "This is an updated synopsis.",
+            japaneseTitle = "オリジナル", synopsis = updatedSynopsis,
             largeImage = "large_img.jpg", rating = "PG-13", nsfw = "SAFE"
         )
 
@@ -119,10 +110,14 @@ class AnimeDataGatewayTest {
         val updatedRecord = gateway.findObject(testId)
 
         assertNotNull(updatedRecord)
-        assertEquals("Updated Title", updatedRecord.title)
-        assertEquals(9.0, updatedRecord.score)
-        assertEquals("This is an updated synopsis.", updatedRecord.synopsis)
+        assertEquals(updatedTitle, updatedRecord.title)
+        assertEquals(updatedScore, updatedRecord.score)
+        assertEquals(updatedSynopsis, updatedRecord.synopsis)
         assertEquals("SPRING", updatedRecord.season)
         assertEquals(2026, updatedRecord.year)
+        assert(
+            updatedRecord.updatedAt.isAfter(updatedRecord.createdAt)
+                    || updatedRecord.updatedAt.isEqual(updatedRecord.createdAt)
+        )
     }
 }

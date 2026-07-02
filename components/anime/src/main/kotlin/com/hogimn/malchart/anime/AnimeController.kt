@@ -6,63 +6,58 @@ import com.hogimn.malchart.restsupport.BasicController
 
 class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) : BasicController() {
     override fun handle(exchange: HttpExchange): Boolean {
-        return get(exchange, "/anime", listOf("application/json", "application/vnd.malchart.v1+json")) {
+        val mediaTypes = listOf("application/json", "application/vnd.malchart.v1+json")
+
+        return get(exchange, "/anime", mediaTypes) {
             val animeId = parameters(exchange)["animeId"]!!
             val record = gateway.findObject(animeId.toInt())
             if (record != null) {
-                mapper.writeValueAsString(record.toAnimeInfo())
+                mapper.writeValueAsString(record.toAnimeInfo("anime info"))
             } else {
                 throw IllegalStateException("Anime with id $animeId not found")
             }
-        } || get(
-            exchange,
-            "/anime/by-year-and-season",
-            listOf("application/json", "application/vnd.malchart.v1+json")
-        ) {
+        } || get(exchange, "/anime/by-year-and-season", mediaTypes) {
             val year = parameters(exchange)["year"]!!.toInt()
             val season = parameters(exchange)["season"]!!
             val records = gateway.findByYearAndSeason(year, season)
-            val animeInfoList = records.map { it.toAnimeInfo() }
+            val animeInfoList = records.map { it.toAnimeInfo("anime info") }
             mapper.writeValueAsString(animeInfoList)
-        } || put(
-            exchange,
-            "/anime",
-            listOf("application/json", "application/vnd.malchart.v1+json")
-        ) {
-            val updateData = mapper.readValue(body(exchange), AnimeInfo::class.java)
+        } || put(exchange, "/anime", mediaTypes) {
+            val request = mapper.readValue(body(exchange), AnimeInfo::class.java)
 
             val updatedRows = gateway.update(
-                id = updateData.id,
-                title = updateData.title,
-                link = updateData.link,
-                image = updateData.image,
-                score = updateData.score,
-                members = updateData.members,
-                genre = updateData.genre,
-                studios = updateData.studios,
-                source = updateData.source,
-                season = updateData.season,
-                year = updateData.year,
-                rank = updateData.rank,
-                popularity = updateData.popularity,
-                scoringCount = updateData.scoringCount,
-                episodes = updateData.episodes,
-                airStatus = updateData.airStatus,
-                type = updateData.type,
-                startDate = updateData.startDate,
-                endDate = updateData.endDate,
-                englishTitle = updateData.englishTitle,
-                japaneseTitle = updateData.japaneseTitle,
-                synopsis = updateData.synopsis,
-                largeImage = updateData.largeImage,
-                rating = updateData.rating,
-                nsfw = updateData.nsfw
+                id = request.id,
+                title = request.title,
+                link = request.link,
+                image = request.image,
+                score = request.score,
+                members = request.members,
+                genre = request.genre,
+                studios = request.studios,
+                source = request.source,
+                season = request.season,
+                year = request.year,
+                rank = request.rank,
+                popularity = request.popularity,
+                scoringCount = request.scoringCount,
+                episodes = request.episodes,
+                airStatus = request.airStatus,
+                type = request.type,
+                startDate = request.startDate,
+                endDate = request.endDate,
+                englishTitle = request.englishTitle,
+                japaneseTitle = request.japaneseTitle,
+                synopsis = request.synopsis,
+                largeImage = request.largeImage,
+                rating = request.rating,
+                nsfw = request.nsfw
             )
 
             if (updatedRows > 0) {
-                """{"result": "success", "updatedRows": $updatedRows}"""
+                val record = gateway.findObject(request.id)!!
+                mapper.writeValueAsString(record.toAnimeInfo("anime updated"))
             } else {
-                throw IllegalStateException("Anime with id ${updateData.id} not found to update")
+                throw IllegalStateException("Anime with id ${request.id} not found to update")
             }
         } || post(
             exchange,
@@ -99,11 +94,11 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) :
                 nsfw = inputData.nsfw
             )
 
-            mapper.writeValueAsString(newRecord.toAnimeInfo())
+            mapper.writeValueAsString(newRecord.toAnimeInfo("anime created"))
         }
     }
 
-    private fun AnimeRecord.toAnimeInfo(): AnimeInfo {
+    private fun AnimeRecord.toAnimeInfo(info: String): AnimeInfo {
         return AnimeInfo(
             id = this.id,
             title = this.title,
@@ -132,7 +127,7 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) :
             largeImage = this.largeImage,
             rating = this.rating,
             nsfw = this.nsfw,
-            "anime info"
+            info
         )
     }
 }

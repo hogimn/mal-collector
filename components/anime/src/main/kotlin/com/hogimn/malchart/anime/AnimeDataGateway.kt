@@ -38,18 +38,17 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
         type: String, startDate: LocalDateTime, endDate: LocalDateTime, englishTitle: String, japaneseTitle: String,
         synopsis: String, largeImage: String, rating: String, nsfw: String
     ): AnimeRecord {
-        val createdAt = LocalDateTime.now()
-        val updatedAt = LocalDateTime.now()
+        val now = LocalDateTime.now()
         return jdbcTemplate.create(
             createSql, {
                 AnimeRecord(
                     id, title, link, image, score, members, genre, studios, source, season, year,
                     rank, popularity, scoringCount, episodes, airStatus, type, startDate, endDate,
-                    englishTitle, japaneseTitle, synopsis, createdAt, updatedAt, largeImage, rating, nsfw
+                    englishTitle, japaneseTitle, synopsis, now, now, largeImage, rating, nsfw
                 )
             }, id, title, link, image, score, members, genre, studios, source, season, year,
             rank, popularity, scoringCount, episodes, airStatus, type, startDate, endDate,
-            englishTitle, japaneseTitle, synopsis, createdAt, updatedAt, largeImage, rating, nsfw
+            englishTitle, japaneseTitle, synopsis, now, now, largeImage, rating, nsfw
         )
     }
 
@@ -60,12 +59,12 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
         type: String, startDate: LocalDateTime, endDate: LocalDateTime, englishTitle: String, japaneseTitle: String,
         synopsis: String, largeImage: String, rating: String, nsfw: String
     ): Int {
-        val updatedAt = LocalDateTime.now()
+        val now = LocalDateTime.now()
         return jdbcTemplate.update(
             updateSql,
             title, link, image, score, members, genre, studios, source, season, year,
             rank, popularity, scoringCount, episodes, airStatus, type, startDate, endDate,
-            englishTitle, japaneseTitle, synopsis, updatedAt, largeImage, rating, nsfw,
+            englishTitle, japaneseTitle, synopsis, now, largeImage, rating, nsfw,
             id
         )
     }

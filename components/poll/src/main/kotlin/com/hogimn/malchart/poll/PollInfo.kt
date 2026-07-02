@@ -9,7 +9,7 @@ data class PollInfo(
     val title: String,
     val episode: Int,
     val votes: Int,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime,
+    val createdAt: LocalDateTime? = null,
+    val updatedAt: LocalDateTime? = null,
     val info: String? = null
 )

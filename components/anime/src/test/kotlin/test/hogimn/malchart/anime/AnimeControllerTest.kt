@@ -145,7 +145,7 @@ class AnimeControllerTest : TestControllerSupport() {
             title = "Attack on Titan - Updated",
             link = "https://example.com/anime/4765-updated",
             image = "https://example.com/img/4765.jpg",
-            score = 9.55, // 스코어 변경
+            score = 9.55,
             members = 2600000,
             genre = "Action, Fantasy, Drama",
             studios = "WIT Studio",
@@ -167,23 +167,20 @@ class AnimeControllerTest : TestControllerSupport() {
             updatedAt = LocalDateTime.of(2026, 6, 28, 21, 0, 0),
             largeImage = "https://example.com/img/4765_large.jpg",
             rating = "R - 17+",
-            nsfw = "SFW",
+            nsfw = "SFW"
         )
 
         val requestBody = mapper.writeValueAsString(updateData)
 
         val response = template.put("http://localhost:8081/anime", "application/json", requestBody)
 
-        val expectedResponse = """{"result": "success", "updatedRows": 1}"""
-        assertEquals(expectedResponse, response)
+        val actual: AnimeInfo = mapper.readValue(response, object : TypeReference<AnimeInfo>() {})
 
-        val idParam = Pair("animeId", "4765")
-        val getResponse = template.get("http://localhost:8081/anime", "application/json", idParam)
-        val actual: AnimeInfo = mapper.readValue(getResponse, object : TypeReference<AnimeInfo>() {})
-
+        assertEquals(4765, actual.id)
         assertEquals("Attack on Titan - Updated", actual.title)
         assertEquals(9.55, actual.score)
         assertEquals(1, actual.rank)
+        assertEquals("anime updated", actual.info)
     }
 
     @Test
@@ -228,7 +225,7 @@ class AnimeControllerTest : TestControllerSupport() {
         assertEquals("Trigger", actual.studios)
         assertEquals("SUMMER", actual.season)
         assertEquals(2026, actual.year)
-        assertEquals("anime info", actual.info)
+        assertEquals("anime created", actual.info)
 
         val now = LocalDateTime.now()
         assert(actual.createdAt!!.isAfter(now.minusSeconds(5)) && actual.createdAt.isBefore(now.plusSeconds(5))) {

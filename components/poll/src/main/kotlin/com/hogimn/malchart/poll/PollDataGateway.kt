@@ -1,64 +1,46 @@
 package com.hogimn.malchart.poll
 
 import com.hogimn.malchart.jdbcsupport.JdbcTemplate
-import java.sql.Connection
 import java.time.LocalDateTime
 
 class PollDataGateway(val jdbcTemplate: JdbcTemplate) {
+    val selectSql = """
+        select content_id, topic_id, poll_option_id, title, episode, votes, created_at, updated_at
+        from poll
+        where content_id = ? and poll_option_id = ? and topic_id = ?
+    """.trimIndent()
+
     val createSql = """
         insert into poll (content_id, topic_id, poll_option_id, title, episode, votes, created_at, updated_at) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?)
+    """.trimIndent()
+
+    val updateSql = """
+        update poll set
+            title = ?, episode = ?, votes = ?, updated_at = ?
+        where content_id = ? and topic_id = ? and poll_option_id = ?
     """.trimIndent()
 
     fun create(
-        connection: Connection,
         contentId: Int,
         topicId: Int,
         pollOptionId: Int,
         title: String,
         episode: Int,
         votes: Int,
-        createdAt: LocalDateTime,
-        updatedAt: LocalDateTime
-    ): PollRecord {
-        val now = LocalDateTime.now()
-
-        return jdbcTemplate.create(
-            connection,
-            createSql,
-            { PollRecord(contentId, topicId, pollOptionId, title, episode, votes, now, now) },
-            contentId, topicId, pollOptionId, title, episode, votes, createdAt, updatedAt
-        )
-    }
-
-    fun create(
-        contentId: Int,
-        topicId: Int,
-        pollOptionId: Int,
-        title: String,
-        episode: Int,
-        votes: Int,
-        createdAt: LocalDateTime,
-        updatedAt: LocalDateTime
     ): PollRecord {
         val now = LocalDateTime.now()
 
         return jdbcTemplate.create(
             createSql,
             { PollRecord(contentId, topicId, pollOptionId, title, episode, votes, now, now) },
-            contentId, topicId, pollOptionId, title, episode, votes, createdAt, updatedAt
+            contentId, topicId, pollOptionId, title, episode, votes, now, now
         )
     }
 
     fun findObject(contentId: Int, topicId: Int, pollOptionId: Int): PollRecord? {
-        val s = """
-            select content_id, topic_id, poll_option_id, title, episode, votes, created_at, updated_at
-            from poll
-            where content_id = ? and poll_option_id = ? and topic_id = ?
-        """.trimIndent()
-
         return jdbcTemplate.findObject(
-            s,
+            selectSql,
             { rs ->
                 PollRecord(
                     contentId = rs.getInt("content_id"),
@@ -72,6 +54,22 @@ class PollDataGateway(val jdbcTemplate: JdbcTemplate) {
                 )
             },
             contentId, pollOptionId, topicId
+        )
+    }
+
+    fun update(
+        contentId: Int,
+        topicId: Int,
+        pollOptionId: Int,
+        title: String,
+        episode: Int,
+        votes: Int
+    ): Int {
+        val now = LocalDateTime.now()
+        return jdbcTemplate.update(
+            updateSql,
+            title, episode, votes, now,
+            contentId, topicId, pollOptionId
         )
     }
 }

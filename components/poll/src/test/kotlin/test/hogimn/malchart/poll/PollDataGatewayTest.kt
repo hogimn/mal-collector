@@ -5,7 +5,6 @@ import com.hogimn.malchart.jdbcsupport.JdbcTemplate
 import com.hogimn.malchart.poll.PollDataGateway
 import org.junit.Before
 import org.junit.Test
-import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -26,9 +25,7 @@ class PollDataGatewayTest {
         val contentId = 4765
         val topicId = 101
         val pollOptionId = 1
-        val nowTime = LocalDateTime.now()
 
-        // 1. Gateway를 통해 poll 데이터 생성
         val createdRecord = gateway.create(
             contentId = contentId,
             topicId = topicId,
@@ -36,8 +33,6 @@ class PollDataGatewayTest {
             title = "To You, in 2000 Years: The Fall of Shiganshina, Part 1",
             episode = 1,
             votes = 15240,
-            createdAt = nowTime,
-            updatedAt = nowTime
         )
 
         assertEquals(contentId, createdRecord.contentId)
@@ -95,5 +90,48 @@ class PollDataGatewayTest {
         assertEquals("Test Poll Title", result.title)
         assertEquals(5, result.episode)
         assertEquals(99, result.votes)
+    }
+
+    @Test
+    fun testUpdate() {
+        val contentId = 4765
+        val topicId = 101
+        val pollOptionId = 1
+
+        gateway.create(
+            contentId = contentId,
+            topicId = topicId,
+            pollOptionId = pollOptionId,
+            title = "Before Title",
+            episode = 1,
+            votes = 10,
+        )
+
+        val updatedTitle = "That's It, That's the Episode Title"
+        val updatedEpisode = 2
+        val updatedVotes = 500
+
+        val updatedCount = gateway.update(
+            contentId = contentId,
+            topicId = topicId,
+            pollOptionId = pollOptionId,
+            title = updatedTitle,
+            episode = updatedEpisode,
+            votes = updatedVotes
+        )
+
+        assertEquals(1, updatedCount)
+
+        val updatedRecord = gateway.findObject(contentId, topicId, pollOptionId)
+
+        assertNotNull(updatedRecord)
+        assertEquals(updatedTitle, updatedRecord.title)
+        assertEquals(updatedEpisode, updatedRecord.episode)
+        assertEquals(updatedVotes, updatedRecord.votes)
+
+        assert(
+            updatedRecord.updatedAt.isAfter(updatedRecord.createdAt)
+                    || updatedRecord.updatedAt.isEqual(updatedRecord.createdAt)
+        )
     }
 }
