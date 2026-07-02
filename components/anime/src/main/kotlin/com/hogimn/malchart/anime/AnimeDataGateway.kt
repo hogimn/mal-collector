@@ -18,7 +18,7 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
             title = ?, link = ?, image = ?, score = ?, members = ?, genre = ?, studios = ?, 
             source = ?, season = ?, year = ?, `rank` = ?, popularity = ?, scoring_count = ?, 
             episodes = ?, air_status = ?, type = ?, start_date = ?, end_date = ?, 
-            english_title = ?, japanese_title = ?, synopsis = ?, created_at = ?, updated_at = ?, 
+            english_title = ?, japanese_title = ?, synopsis = ?, updated_at = ?, 
             large_image = ?, rating = ?, nsfw = ?
         where id = ?
     """.trimIndent()
@@ -36,9 +36,10 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
         genre: String, studios: String, source: String, season: String, year: Int,
         rank: Int, popularity: Int, scoringCount: Int, episodes: Int, airStatus: String,
         type: String, startDate: LocalDateTime, endDate: LocalDateTime, englishTitle: String, japaneseTitle: String,
-        synopsis: String, createdAt: LocalDateTime, updatedAt: LocalDateTime, largeImage: String,
-        rating: String, nsfw: String
+        synopsis: String, largeImage: String, rating: String, nsfw: String
     ): AnimeRecord {
+        val createdAt = LocalDateTime.now()
+        val updatedAt = LocalDateTime.now()
         return jdbcTemplate.create(
             createSql, {
                 AnimeRecord(
@@ -57,14 +58,14 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
         genre: String, studios: String, source: String, season: String, year: Int,
         rank: Int, popularity: Int, scoringCount: Int, episodes: Int, airStatus: String,
         type: String, startDate: LocalDateTime, endDate: LocalDateTime, englishTitle: String, japaneseTitle: String,
-        synopsis: String, createdAt: LocalDateTime, updatedAt: LocalDateTime, largeImage: String,
-        rating: String, nsfw: String
+        synopsis: String, largeImage: String, rating: String, nsfw: String
     ): Int {
+        val updatedAt = LocalDateTime.now()
         return jdbcTemplate.update(
             updateSql,
             title, link, image, score, members, genre, studios, source, season, year,
             rank, popularity, scoringCount, episodes, airStatus, type, startDate, endDate,
-            englishTitle, japaneseTitle, synopsis, createdAt, updatedAt, largeImage, rating, nsfw,
+            englishTitle, japaneseTitle, synopsis, updatedAt, largeImage, rating, nsfw,
             id
         )
     }

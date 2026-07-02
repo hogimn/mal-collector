@@ -54,8 +54,6 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) :
                 englishTitle = updateData.englishTitle,
                 japaneseTitle = updateData.japaneseTitle,
                 synopsis = updateData.synopsis,
-                createdAt = updateData.createdAt,
-                updatedAt = java.time.LocalDateTime.now(),
                 largeImage = updateData.largeImage,
                 rating = updateData.rating,
                 nsfw = updateData.nsfw
@@ -66,6 +64,42 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) :
             } else {
                 throw IllegalStateException("Anime with id ${updateData.id} not found to update")
             }
+        } || post(
+            exchange,
+            "/anime",
+            listOf("application/json", "application/vnd.malchart.v1+json")
+        ) {
+            val inputData = mapper.readValue(body(exchange), AnimeInfo::class.java)
+
+            val newRecord = gateway.create(
+                id = inputData.id,
+                title = inputData.title,
+                link = inputData.link,
+                image = inputData.image,
+                score = inputData.score,
+                members = inputData.members,
+                genre = inputData.genre,
+                studios = inputData.studios,
+                source = inputData.source,
+                season = inputData.season,
+                year = inputData.year,
+                rank = inputData.rank,
+                popularity = inputData.popularity,
+                scoringCount = inputData.scoringCount,
+                episodes = inputData.episodes,
+                airStatus = inputData.airStatus,
+                type = inputData.type,
+                startDate = inputData.startDate,
+                endDate = inputData.endDate,
+                englishTitle = inputData.englishTitle,
+                japaneseTitle = inputData.japaneseTitle,
+                synopsis = inputData.synopsis,
+                largeImage = inputData.largeImage,
+                rating = inputData.rating,
+                nsfw = inputData.nsfw
+            )
+
+            mapper.writeValueAsString(newRecord.toAnimeInfo())
         }
     }
 

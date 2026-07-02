@@ -4,9 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.hogimn.malchart.anime.AnimeController
 import com.hogimn.malchart.anime.AnimeDataGateway
 import com.hogimn.malchart.anime.AnimeInfo
-import com.hogimn.malchart.anime.AnimeRecord
-// 만약 gateway가 반환하는 타입이 AnimeRecord라면 아래 주석을 풀고 사용하세요.
-// import com.hogimn.malchart.anime.AnimeRecord
 import com.hogimn.malchart.jdbcsupport.DataSourceConfig
 import com.hogimn.malchart.jdbcsupport.JdbcTemplate
 import com.hogimn.malchart.restsupport.BasicServer
@@ -171,7 +168,6 @@ class AnimeControllerTest : TestControllerSupport() {
             largeImage = "https://example.com/img/4765_large.jpg",
             rating = "R - 17+",
             nsfw = "SFW",
-            info = "anime info"
         )
 
         val requestBody = mapper.writeValueAsString(updateData)
@@ -188,5 +184,65 @@ class AnimeControllerTest : TestControllerSupport() {
         assertEquals("Attack on Titan - Updated", actual.title)
         assertEquals(9.55, actual.score)
         assertEquals(1, actual.rank)
+    }
+
+    @Test
+    fun testCreate() {
+        val newAnime = AnimeInfo(
+            id = 9999,
+            title = "New Anime Title",
+            link = "https://example.com/anime/9999",
+            image = "https://example.com/img/9999.jpg",
+            score = 8.5,
+            members = 100000,
+            genre = "Sci-Fi, Action",
+            studios = "Trigger",
+            source = "Original",
+            season = "SUMMER",
+            year = 2026,
+            rank = 150,
+            popularity = 300,
+            scoringCount = 85000,
+            episodes = 12,
+            airStatus = "Currently Airing",
+            type = "TV",
+            startDate = LocalDateTime.of(2026, 7, 1, 0, 0, 0),
+            endDate = LocalDateTime.of(2026, 9, 23, 0, 0, 0),
+            englishTitle = "New Anime English",
+            japaneseTitle = "New Anime Japanese",
+            synopsis = "This is a synopsis for the newly created anime.",
+            largeImage = "https://example.com/img/9999_large.jpg",
+            rating = "PG-13",
+            nsfw = "SFW",
+        )
+
+        val requestBody = mapper.writeValueAsString(newAnime)
+
+        val response = template.post("http://localhost:8081/anime", "application/json", requestBody)
+        val actual: AnimeInfo = mapper.readValue(response, object : TypeReference<AnimeInfo>() {})
+
+        assertEquals(9999, actual.id)
+        assertEquals("New Anime Title", actual.title)
+        assertEquals("https://example.com/anime/9999", actual.link)
+        assertEquals(8.5, actual.score)
+        assertEquals("Trigger", actual.studios)
+        assertEquals("SUMMER", actual.season)
+        assertEquals(2026, actual.year)
+        assertEquals("anime info", actual.info)
+
+        val now = LocalDateTime.now()
+        assert(actual.createdAt!!.isAfter(now.minusSeconds(5)) && actual.createdAt.isBefore(now.plusSeconds(5))) {
+            "createdAt이 현재 시간 범위 내에 없습니다: ${actual.createdAt}"
+        }
+        assert(actual.updatedAt!!.isAfter(now.minusSeconds(5)) && actual.updatedAt.isBefore(now.plusSeconds(5))) {
+            "updatedAt이 현재 시간 범위 내에 없습니다: ${actual.updatedAt}"
+        }
+
+        val idParam = Pair("animeId", "9999")
+        val getResponse = template.get("http://localhost:8081/anime", "application/json", idParam)
+        val dbActual: AnimeInfo = mapper.readValue(getResponse, object : TypeReference<AnimeInfo>() {})
+
+        assertEquals("New Anime Title", dbActual.title)
+        assertEquals(9999, dbActual.id)
     }
 }

@@ -33,8 +33,7 @@ class AnimeDataGatewayTest {
             scoringCount = 9800, episodes = 12, airStatus = "FINISHED", type = "ONA",
             startDate = nowTime, endDate = nowTime, englishTitle = "For the Sake of Sita",
             japaneseTitle = "シタのために", synopsis = "A mystical fantasy romance story.",
-            createdAt = nowTime, updatedAt = nowTime, largeImage = "large_img.jpg",
-            rating = "PG-13", nsfw = "SAFE"
+            largeImage = "large_img.jpg", rating = "PG-13", nsfw = "SAFE"
         )
 
         assertEquals(testId, createdRecord.id)
@@ -102,11 +101,9 @@ class AnimeDataGatewayTest {
             scoringCount = 800, episodes = 12, airStatus = "AIRING", type = "TV",
             startDate = nowTime, endDate = nowTime, englishTitle = "Original Title",
             japaneseTitle = "オリジナル", synopsis = "Original synopsis.",
-            createdAt = nowTime, updatedAt = nowTime, largeImage = "large_img.jpg",
-            rating = "PG-13", nsfw = "SAFE"
+            largeImage = "large_img.jpg", rating = "PG-13", nsfw = "SAFE"
         )
 
-        val updatedTime = nowTime.plusHours(1)
         val updatedRows = gateway.update(
             id = testId, title = "Updated Title", link = "https://link.com", image = "img.jpg",
             score = 9.0, members = 1000, genre = "Action", studios = "A-1 Pictures",
@@ -114,8 +111,7 @@ class AnimeDataGatewayTest {
             scoringCount = 800, episodes = 12, airStatus = "AIRING", type = "TV",
             startDate = nowTime, endDate = nowTime, englishTitle = "Original Title",
             japaneseTitle = "オリジナル", synopsis = "This is an updated synopsis.",
-            createdAt = nowTime, updatedAt = updatedTime, largeImage = "large_img.jpg",
-            rating = "PG-13", nsfw = "SAFE"
+            largeImage = "large_img.jpg", rating = "PG-13", nsfw = "SAFE"
         )
 
         assertEquals(1, updatedRows)
@@ -126,7 +122,6 @@ class AnimeDataGatewayTest {
         assertEquals("Updated Title", updatedRecord.title)
         assertEquals(9.0, updatedRecord.score)
         assertEquals("This is an updated synopsis.", updatedRecord.synopsis)
-        assertEquals(updatedTime, updatedRecord.updatedAt)
         assertEquals("SPRING", updatedRecord.season)
         assertEquals(2026, updatedRecord.year)
     }
