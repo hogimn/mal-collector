@@ -1,0 +1,21 @@
+dependencies {
+    implementation(project(":components:discovery-support"))
+    implementation(project(":components:jdbc-support"))
+    implementation(project(":components:rest-support"))
+
+    implementation(project(":components:poll"))
+
+    implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("com.zaxxer:HikariCP:$hikari_version")
+    implementation("com.mysql:mysql-connector-j:$mysql_connector_version")
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "com.hogimn.malchart.poll.AppKt"
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}

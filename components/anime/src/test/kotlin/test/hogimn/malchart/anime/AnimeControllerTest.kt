@@ -48,7 +48,7 @@ class AnimeControllerTest : TestControllerSupport() {
     fun testFind() {
         TestScenarioSupport(dataSource).loadTestScenario("jacks-test-scenario")
 
-        val id = Pair("animeId", "4765")
+        val id = Pair("id", "4765")
         val response = template.get("http://localhost:8081/anime", "application/json", id)
         val actual: AnimeInfo = mapper.readValue(response, object : TypeReference<AnimeInfo>() {})
 
@@ -228,18 +228,112 @@ class AnimeControllerTest : TestControllerSupport() {
         assertEquals("anime created", actual.info)
 
         val now = LocalDateTime.now()
-        assert(actual.createdAt!!.isAfter(now.minusSeconds(5)) && actual.createdAt.isBefore(now.plusSeconds(5))) {
-            "createdAt이 현재 시간 범위 내에 없습니다: ${actual.createdAt}"
-        }
-        assert(actual.updatedAt!!.isAfter(now.minusSeconds(5)) && actual.updatedAt.isBefore(now.plusSeconds(5))) {
-            "updatedAt이 현재 시간 범위 내에 없습니다: ${actual.updatedAt}"
-        }
+        assert(actual.createdAt!!.isAfter(now.minusSeconds(5)) && actual.createdAt.isBefore(now.plusSeconds(5)))
+        assert(actual.updatedAt!!.isAfter(now.minusSeconds(5)) && actual.updatedAt.isBefore(now.plusSeconds(5)))
 
-        val idParam = Pair("animeId", "9999")
+        val idParam = Pair("id", "9999")
         val getResponse = template.get("http://localhost:8081/anime", "application/json", idParam)
         val dbActual: AnimeInfo = mapper.readValue(getResponse, object : TypeReference<AnimeInfo>() {})
 
         assertEquals("New Anime Title", dbActual.title)
         assertEquals(9999, dbActual.id)
+    }
+
+    @Test
+    fun testUpsertCreate() {
+        val upsertData = AnimeInfo(
+            id = 8888,
+            title = "Cyberpunk: Edgerunners",
+            link = "https://example.com/anime/8888",
+            image = "https://example.com/img/8888.jpg",
+            score = 8.6,
+            members = 500000,
+            genre = "Sci-Fi, Action",
+            studios = "Trigger",
+            source = "Video Game",
+            season = "FALL",
+            year = 2022,
+            rank = 80,
+            popularity = 120,
+            scoringCount = 450000,
+            episodes = 10,
+            airStatus = "Finished Airing",
+            type = "ONA",
+            startDate = LocalDateTime.of(2022, 9, 13, 0, 0, 0),
+            endDate = LocalDateTime.of(2022, 9, 13, 0, 0, 0),
+            englishTitle = "Cyberpunk: Edgerunners",
+            japaneseTitle = "サイバーパンク エッジランナーズ",
+            synopsis = "A street kid trying to survive in a technology and body modification-obsessed city of the future.",
+            largeImage = "https://example.com/img/8888_large.jpg",
+            rating = "R - 17+",
+            nsfw = "SFW"
+        )
+
+        val requestBody = mapper.writeValueAsString(upsertData)
+
+        val response = template.post("http://localhost:8081/anime/upsert", "application/json", requestBody)
+        val actual: AnimeInfo = mapper.readValue(response, object : TypeReference<AnimeInfo>() {})
+
+        assertEquals(8888, actual.id)
+        assertEquals("Cyberpunk: Edgerunners", actual.title)
+        assertEquals("anime upserted", actual.info)
+
+        val idParam = Pair("id", "8888")
+        val getResponse = template.get("http://localhost:8081/anime", "application/json", idParam)
+        val dbActual: AnimeInfo = mapper.readValue(getResponse, object : TypeReference<AnimeInfo>() {})
+
+        assertEquals("Cyberpunk: Edgerunners", dbActual.title)
+        assertEquals(8888, dbActual.id)
+    }
+
+    @Test
+    fun testUpsertUpdate() {
+        TestScenarioSupport(dataSource).loadTestScenario("jacks-test-scenario")
+
+        val upsertData = AnimeInfo(
+            id = 4765,
+            title = "Attack on Titan - Upsert Updated",
+            link = "https://example.com/anime/4765-upsert",
+            image = "https://example.com/img/4765.jpg",
+            score = 9.88,
+            members = 3000000,
+            genre = "Action, Fantasy",
+            studios = "WIT Studio",
+            source = "Manga",
+            season = "SPRING",
+            year = 2013,
+            rank = 1,
+            popularity = 1,
+            scoringCount = 2000000,
+            episodes = 25,
+            airStatus = "Finished Airing",
+            type = "TV",
+            startDate = LocalDateTime.of(2013, 4, 7, 0, 0, 0),
+            endDate = LocalDateTime.of(2013, 9, 29, 0, 0, 0),
+            englishTitle = "Attack on Titan",
+            japaneseTitle = "Shingeki no Kyojin",
+            synopsis = "Centuries ago, mankind was slaughtered to near extinction...",
+            largeImage = "https://example.com/img/4765_large.jpg",
+            rating = "R - 17+",
+            nsfw = "SFW"
+        )
+
+        val requestBody = mapper.writeValueAsString(upsertData)
+
+        val response = template.post("http://localhost:8081/anime/upsert", "application/json", requestBody)
+        val actual: AnimeInfo = mapper.readValue(response, object : TypeReference<AnimeInfo>() {})
+
+        assertEquals(4765, actual.id)
+        assertEquals("Attack on Titan - Upsert Updated", actual.title)
+        assertEquals(9.88, actual.score)
+        assertEquals(1, actual.rank)
+        assertEquals("anime upserted", actual.info)
+
+        val idParam = Pair("id", "4765")
+        val getResponse = template.get("http://localhost:8081/anime", "application/json", idParam)
+        val dbActual: AnimeInfo = mapper.readValue(getResponse, object : TypeReference<AnimeInfo>() {})
+
+        assertEquals("Attack on Titan - Upsert Updated", dbActual.title)
+        assertEquals(9.88, dbActual.score)
     }
 }

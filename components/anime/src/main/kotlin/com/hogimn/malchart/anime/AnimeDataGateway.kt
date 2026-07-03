@@ -31,6 +31,22 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
         from anime
     """.trimIndent()
 
+    private val upsertSql = """
+        insert into anime (
+            id, title, link, image, score, members, genre, studios, source, season, year, 
+            `rank`, popularity, scoring_count, episodes, air_status, type, start_date, end_date, 
+            english_title, japanese_title, synopsis, created_at, updated_at, large_image, rating, nsfw
+        ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        on duplicate key update
+            title = values(title), link = values(link), image = values(image), score = values(score), 
+            members = values(members), genre = values(genre), studios = values(studios), source = values(source), 
+            season = values(season), year = values(year), `rank` = values(`rank`), popularity = values(popularity), 
+            scoring_count = values(scoring_count), episodes = values(episodes), air_status = values(air_status), 
+            type = values(type), start_date = values(start_date), end_date = values(end_date), 
+            english_title = values(english_title), japanese_title = values(japanese_title), synopsis = values(synopsis), 
+            updated_at = values(updated_at), large_image = values(large_image), rating = values(rating), nsfw = values(nsfw)
+    """.trimIndent()
+
     fun create(
         id: Int, title: String, link: String, image: String, score: Double, members: Int,
         genre: String, studios: String, source: String, season: String, year: Int,
@@ -66,6 +82,28 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
             rank, popularity, scoringCount, episodes, airStatus, type, startDate, endDate,
             englishTitle, japaneseTitle, synopsis, now, largeImage, rating, nsfw,
             id
+        )
+    }
+
+    fun upsert(
+        id: Int, title: String, link: String, image: String, score: Double, members: Int,
+        genre: String, studios: String, source: String, season: String, year: Int,
+        rank: Int, popularity: Int, scoringCount: Int, episodes: Int, airStatus: String,
+        type: String, startDate: LocalDateTime, endDate: LocalDateTime, englishTitle: String, japaneseTitle: String,
+        synopsis: String, largeImage: String, rating: String, nsfw: String
+    ): AnimeRecord {
+        val now = LocalDateTime.now()
+
+        return jdbcTemplate.create(
+            upsertSql, {
+                AnimeRecord(
+                    id, title, link, image, score, members, genre, studios, source, season, year,
+                    rank, popularity, scoringCount, episodes, airStatus, type, startDate, endDate,
+                    englishTitle, japaneseTitle, synopsis, now, now, largeImage, rating, nsfw
+                )
+            }, id, title, link, image, score, members, genre, studios, source, season, year,
+            rank, popularity, scoringCount, episodes, airStatus, type, startDate, endDate,
+            englishTitle, japaneseTitle, synopsis, now, now, largeImage, rating, nsfw
         )
     }
 

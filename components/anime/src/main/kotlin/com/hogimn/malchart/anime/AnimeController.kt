@@ -9,12 +9,12 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) :
         val mediaTypes = listOf("application/json", "application/vnd.malchart.v1+json")
 
         return get(exchange, "/anime", mediaTypes) {
-            val animeId = parameters(exchange)["animeId"]!!
-            val record = gateway.findObject(animeId.toInt())
+            val id = parameters(exchange)["id"]!!
+            val record = gateway.findObject(id.toInt())
             if (record != null) {
                 mapper.writeValueAsString(record.toAnimeInfo("anime info"))
             } else {
-                throw IllegalStateException("Anime with id $animeId not found")
+                throw IllegalStateException("Anime with id $id not found")
             }
         } || get(exchange, "/anime/by-year-and-season", mediaTypes) {
             val year = parameters(exchange)["year"]!!.toInt()
@@ -95,6 +95,42 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) :
             )
 
             mapper.writeValueAsString(newRecord.toAnimeInfo("anime created"))
+        } || post(
+            exchange,
+        "/anime/upsert",
+            listOf("application/json", "application/vnd.malchart.v1+json")
+        ) {
+            val inputData = mapper.readValue(body(exchange), AnimeInfo::class.java)
+
+            val newRecord = gateway.upsert(
+                id = inputData.id,
+                title = inputData.title,
+                link = inputData.link,
+                image = inputData.image,
+                score = inputData.score,
+                members = inputData.members,
+                genre = inputData.genre,
+                studios = inputData.studios,
+                source = inputData.source,
+                season = inputData.season,
+                year = inputData.year,
+                rank = inputData.rank,
+                popularity = inputData.popularity,
+                scoringCount = inputData.scoringCount,
+                episodes = inputData.episodes,
+                airStatus = inputData.airStatus,
+                type = inputData.type,
+                startDate = inputData.startDate,
+                endDate = inputData.endDate,
+                englishTitle = inputData.englishTitle,
+                japaneseTitle = inputData.japaneseTitle,
+                synopsis = inputData.synopsis,
+                largeImage = inputData.largeImage,
+                rating = inputData.rating,
+                nsfw = inputData.nsfw
+            )
+
+            mapper.writeValueAsString(newRecord.toAnimeInfo("anime upserted"))
         }
     }
 

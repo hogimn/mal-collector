@@ -26,7 +26,7 @@ class FlowTest {
         RedisConfig().getClient("localhost", "foobared").flushAll()
 
         discovery = runCommand(
-            8888,
+            8880,
             "discovery",
             "java -jar $userDir/../discovery-server/build/libs/discovery-server.jar",
             File(userDir)
@@ -64,11 +64,11 @@ class FlowTest {
 
     @Test
     fun testBasicFlow() {
-        listOf(8888, 8881, 8882, 8883, 8884).forEach { waitUntilReady("http://localhost:$it") }
+        listOf(8880, 8881, 8882, 8883, 8884).forEach { waitUntilReady("http://localhost:$it") }
 
         var response: String?
 
-        val discoveryServer = "http://localhost:8888"
+        val discoveryServer = "http://localhost:8880"
         response = template.get(discoveryServer, "application/json")
         assertEquals("Noop!", response)
 
@@ -188,7 +188,7 @@ class FlowTest {
             "jdbc:mysql://localhost:3306/${services}_test?user=uservices&password=uservices"
         builder.environment()["REDIS_HOST"] = "localhost"
         builder.environment()["REDIS_PASSWORD"] = "foobared"
-        builder.environment()["DISCOVERY_SERVER_ENDPOINT"] = "http://localhost:8888"
+        builder.environment()["DISCOVERY_SERVER_ENDPOINT"] = "http://localhost:8880"
         return builder.start()
     }
 }

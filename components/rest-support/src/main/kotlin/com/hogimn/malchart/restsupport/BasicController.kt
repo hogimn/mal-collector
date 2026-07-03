@@ -34,9 +34,12 @@ abstract class BasicController {
             logger.info("Received $method request at $uri")
             sendResponse(exchange, successStatus, block())
         } catch (e: IllegalStateException) {
-            sendResponse(exchange, 422, "")
+            sendResponse(exchange, 422, e.message.toString())
         } catch (e: SQLException) {
-            sendResponse(exchange, 500, "")
+            sendResponse(exchange, 500, e.message.toString())
+        } catch (e: Exception) {
+            logger.error(e.message, e)
+            sendResponse(exchange, 500, e.message.toString())
         }
         return true
     }

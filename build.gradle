@@ -9,6 +9,7 @@ buildscript {
     ext.mockito_version = "5.14.2"
     ext.mysql_connector_version = "9.3.0"
     ext.slf4j_version = "2.0.17"
+    ext.mal4j_version = "3.4.3"
 }
 
 plugins {

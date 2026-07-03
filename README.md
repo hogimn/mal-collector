@@ -116,6 +116,21 @@ PORT=8884 \
 DATABASE_URL="jdbc:mysql://localhost:3306/timesheets_test?user=uservices&password=uservices" \
 DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/timesheets-server/build/libs/timesheets-server.jar
+
+PORT=8885 \
+DATABASE_URL="jdbc:mysql://localhost:3306/anime_test?user=uservices&password=uservices" \
+DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
+java -jar applications/anime-server/build/libs/anime-server.jar
+
+PORT=8886 \
+DATABASE_URL="jdbc:mysql://localhost:3306/poll_test?user=uservices&password=uservices" \
+DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
+java -jar applications/poll-server/build/libs/poll-server.jar
+
+PORT=8887 \
+MAL_CLIENT_ID="YOUR_MAL_CLIENT_ID" \
+DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
+java -jar applications/mal-server/build/libs/mal-server.jar
 ```
 
 | Variable | Used by | Description |

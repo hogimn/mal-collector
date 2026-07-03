@@ -120,4 +120,63 @@ class AnimeDataGatewayTest {
                     || updatedRecord.updatedAt.isEqual(updatedRecord.createdAt)
         )
     }
+
+    @Test
+    fun testUpsertInsert() {
+        val testId = 4444
+        val nowTime = LocalDateTime.now()
+
+        val insertedRecord = gateway.upsert(
+            id = testId, title = "Initial Title", link = "https://link.com", image = "img.jpg",
+            score = 7.5, members = 2000, genre = "Comedy", studios = "CloverWorks",
+            source = "Manga", season = "WINTER", year = 2026, rank = 100, popularity = 400,
+            scoringCount = 1500, episodes = 12, airStatus = "FINISHED", type = "TV",
+            startDate = nowTime, endDate = nowTime, englishTitle = "Initial Title",
+            japaneseTitle = "イニシャル", synopsis = "Initial synopsis.",
+            largeImage = "large_img.jpg", rating = "PG-13", nsfw = "SAFE"
+        )
+
+        assertEquals(testId, insertedRecord.id)
+        assertEquals("Initial Title", insertedRecord.title)
+
+        val actual = gateway.findObject(testId)
+        assertNotNull(actual)
+        assertEquals("Initial Title", actual.title)
+        assertEquals(7.5, actual.score)
+    }
+
+    @Test
+    fun testUpsertUpdate() {
+        val testId = 3333
+        val nowTime = LocalDateTime.now()
+
+        gateway.create(
+            id = testId, title = "Before Upsert", link = "https://link.com", image = "img.jpg",
+            score = 6.0, members = 500, genre = "Drama", studios = "Kyoto Animation",
+            source = "Novel", season = "SPRING", year = 2026, rank = 200, popularity = 800,
+            scoringCount = 400, episodes = 14, airStatus = "FINISHED", type = "TV",
+            startDate = nowTime, endDate = nowTime, englishTitle = "Before Upsert",
+            japaneseTitle = "ビフォー", synopsis = "Before synopsis.",
+            largeImage = "large_img.jpg", rating = "G", nsfw = "SAFE"
+        )
+
+        val upsertedRecord = gateway.upsert(
+            id = testId, title = "After Upsert", link = "https://link.com", image = "img.jpg",
+            score = 9.2, members = 50000, genre = "Drama", studios = "Kyoto Animation",
+            source = "Novel", season = "SPRING", year = 2026, rank = 5, popularity = 50,
+            scoringCount = 45000, episodes = 14, airStatus = "FINISHED", type = "TV",
+            startDate = nowTime, endDate = nowTime, englishTitle = "After Upsert",
+            japaneseTitle = "アフター", synopsis = "After synopsis.",
+            largeImage = "large_img.jpg", rating = "G", nsfw = "SAFE"
+        )
+
+        assertEquals(testId, upsertedRecord.id)
+
+        val actual = gateway.findObject(testId)
+        assertNotNull(actual)
+        assertEquals("After Upsert", actual.title)
+        assertEquals(9.2, actual.score)
+        assertEquals(5, actual.rank)
+        assertEquals("After synopsis.", actual.synopsis)
+    }
 }
