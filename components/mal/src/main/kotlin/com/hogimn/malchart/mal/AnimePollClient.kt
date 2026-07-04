@@ -111,6 +111,7 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
 
                 val pollInfo = PollInfo(
                     contentId = animeId,
+                    contentType = "anime",
                     topicId = topicId.toInt(),
                     pollOptionId = pollOptionId!!,
                     title = topicTitle,
@@ -136,6 +137,7 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
             try {
                 val pollInfo = PollInfo(
                     contentId = animeId,
+                    contentType = "anime",
                     topicId = topicId.toInt(),
                     pollOptionId = pollOptionId,
                     title = topicTitle,

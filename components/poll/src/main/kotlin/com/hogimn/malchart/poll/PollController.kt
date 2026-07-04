@@ -11,14 +11,15 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
 
         return get(exchange, "/poll", mediaTypes) {
             val contentId = parameters(exchange)["contentId"]!!
+            val contentType = parameters(exchange)["contentType"]!!
             val topicId = parameters(exchange)["topicId"]!!
             val pollOptionId = parameters(exchange)["pollOptionId"]!!
-            val record = gateway.findObject(contentId.toInt(), topicId.toInt(), pollOptionId.toInt())
+            val record = gateway.findObject(contentId.toInt(), contentType, topicId.toInt(), pollOptionId.toInt())
             if (record != null) {
                 mapper.writeValueAsString(record.toPollInfo("poll info"))
             } else {
                 throw IllegalStateException(
-                    "Poll with id $contentId pollOptionId $pollOptionId topicId $topicId not found"
+                    "Poll with id $contentId contentType $contentType pollOptionId $pollOptionId topicId $topicId not found"
                 )
             }
         } || post(exchange, "/poll", mediaTypes) {
@@ -26,6 +27,7 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
 
             val record = gateway.create(
                 contentId = request.contentId,
+                contentType = request.contentType,
                 topicId = request.topicId,
                 pollOptionId = request.pollOptionId,
                 title = request.title,
@@ -39,6 +41,7 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
 
             val updatedCount = gateway.update(
                 contentId = request.contentId,
+                contentType = request.contentType,
                 topicId = request.topicId,
                 pollOptionId = request.pollOptionId,
                 title = request.title,
@@ -47,7 +50,9 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
             )
 
             if (updatedCount > 0) {
-                val record = gateway.findObject(request.contentId, request.topicId, request.pollOptionId)!!
+                val record = gateway.findObject(
+                    request.contentId, request.contentType, request.topicId, request.pollOptionId
+                )!!
                 mapper.writeValueAsString(record.toPollInfo("poll updated"))
             } else {
                 throw IllegalStateException(
@@ -60,6 +65,7 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
 
             val record = gateway.upsert(
                 contentId = request.contentId,
+                contentType = request.contentType,
                 topicId = request.topicId,
                 pollOptionId = request.pollOptionId,
                 title = request.title,
@@ -74,6 +80,7 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
     private fun PollRecord.toPollInfo(info: String): PollInfo {
         return PollInfo(
             contentId = this.contentId,
+            contentType = this.contentType,
             topicId = this.topicId,
             pollOptionId = this.pollOptionId,
             title = this.title,

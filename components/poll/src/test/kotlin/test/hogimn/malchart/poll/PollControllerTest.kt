@@ -53,12 +53,14 @@ class PollControllerTest : TestControllerSupport() {
             "http://localhost:8081/poll",
             "application/json",
             Pair("contentId", "4765"),
+            Pair("contentType", "anime"),
             Pair("topicId", "101"),
             Pair("pollOptionId", "1")
         )
         val actual: PollInfo = mapper.readValue(response, object : TypeReference<PollInfo>() {})
 
         assertEquals(4765, actual.contentId)
+        assertEquals("anime", actual.contentType)
         assertEquals(101, actual.topicId)
         assertEquals(1, actual.pollOptionId)
         assertEquals("To You, in 2000 Years: The Fall of Shiganshina, Part 1", actual.title)
@@ -73,6 +75,7 @@ class PollControllerTest : TestControllerSupport() {
     fun testCreate() {
         val newPoll = PollInfo(
             contentId = 5555,
+            contentType = "manga",
             topicId = 202,
             pollOptionId = 2,
             title = "A Sound Argument",
@@ -89,6 +92,7 @@ class PollControllerTest : TestControllerSupport() {
 
         val actual: PollInfo = mapper.readValue(response, object : TypeReference<PollInfo>() {})
         assertEquals(5555, actual.contentId)
+        assertEquals("manga", actual.contentType)
         assertEquals(202, actual.topicId)
         assertEquals(2, actual.pollOptionId)
         assertEquals("A Sound Argument", actual.title)
@@ -105,6 +109,7 @@ class PollControllerTest : TestControllerSupport() {
 
         val updatePoll = PollInfo(
             contentId = 4765,
+            contentType = "anime",
             topicId = 101,
             pollOptionId = 1,
             title = "Updated Title: The Fall of Shiganshina, Part 1",
@@ -121,6 +126,7 @@ class PollControllerTest : TestControllerSupport() {
 
         val actual: PollInfo = mapper.readValue(response, object : TypeReference<PollInfo>() {})
         assertEquals(4765, actual.contentId)
+        assertEquals("anime", actual.contentType)
         assertEquals("Updated Title: The Fall of Shiganshina, Part 1", actual.title)
         assertEquals(2, actual.episode)
         assertEquals(16000, actual.votes)
@@ -134,6 +140,7 @@ class PollControllerTest : TestControllerSupport() {
     fun testUpsertCreate() {
         val upsertPoll = PollInfo(
             contentId = 6666,
+            contentType = "lightnovel",
             topicId = 303,
             pollOptionId = 3,
             title = "Brave New World",
@@ -150,6 +157,7 @@ class PollControllerTest : TestControllerSupport() {
 
         val actual: PollInfo = mapper.readValue(response, object : TypeReference<PollInfo>() {})
         assertEquals(6666, actual.contentId)
+        assertEquals("lightnovel", actual.contentType)
         assertEquals(303, actual.topicId)
         assertEquals(3, actual.pollOptionId)
         assertEquals("Brave New World", actual.title)
@@ -157,12 +165,13 @@ class PollControllerTest : TestControllerSupport() {
         assertEquals(5000, actual.votes)
         assertEquals("poll upserted", actual.info)
         assertNotNull(actual.createdAt)
-        assertNotNull(actual.updatedAt)
+        assertNotNull(assertNotNull(actual.updatedAt))
 
         val getResponse = template.get(
             "http://localhost:8081/poll",
             "application/json",
             Pair("contentId", "6666"),
+            Pair("contentType", "lightnovel"),
             Pair("topicId", "303"),
             Pair("pollOptionId", "3")
         )
@@ -177,6 +186,7 @@ class PollControllerTest : TestControllerSupport() {
 
         val upsertPoll = PollInfo(
             contentId = 4765,
+            contentType = "anime",
             topicId = 101,
             pollOptionId = 1,
             title = "Upsert Updated Title: The Fall of Shiganshina, Part 1",
@@ -193,6 +203,7 @@ class PollControllerTest : TestControllerSupport() {
 
         val actual: PollInfo = mapper.readValue(response, object : TypeReference<PollInfo>() {})
         assertEquals(4765, actual.contentId)
+        assertEquals("anime", actual.contentType)
         assertEquals("Upsert Updated Title: The Fall of Shiganshina, Part 1", actual.title)
         assertEquals(20000, actual.votes)
         assertEquals("poll upserted", actual.info)
@@ -201,6 +212,7 @@ class PollControllerTest : TestControllerSupport() {
             "http://localhost:8081/poll",
             "application/json",
             Pair("contentId", "4765"),
+            Pair("contentType", "anime"),
             Pair("topicId", "101"),
             Pair("pollOptionId", "1")
         )

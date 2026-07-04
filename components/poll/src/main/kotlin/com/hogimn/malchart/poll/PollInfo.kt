@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 data class PollInfo(
     val contentId: Int,
+    val contentType: String,
     val topicId: Int,
     val pollOptionId: Int,
     val title: String,
