@@ -21,7 +21,9 @@ class AnimeClient(val mapper: ObjectMapper, val template: RestTemplate, val malP
 
         val endpoint = DiscoveryClient(mapper, template).getUrl("anime")
         val animeList = findSeasonalAnime(year, season)
-        for (anime in animeList) {
+        animeList.forEachIndexed { index, anime ->
+            logger.info("[${index + 1}/${animeList.size}] Collecting anime for: ${anime.title}")
+
             sleep(2000)
             try {
                 val startSeason = anime.startSeason
@@ -34,7 +36,7 @@ class AnimeClient(val mapper: ObjectMapper, val template: RestTemplate, val malP
                         anime.title, anime.startSeason.year, year,
                         anime.startSeason.season.field(), season
                     )
-                    continue
+                    return@forEachIndexed
                 }
 
                 val animeInfo = anime.toAnimeInfo()
