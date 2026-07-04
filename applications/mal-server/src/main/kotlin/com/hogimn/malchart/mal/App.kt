@@ -18,8 +18,9 @@ class App(port: Int) : BasicServer(port) {
     val clientId: String = getenv("MAL_CLIENT_ID")
 
     override fun registerContexts() {
-        val animeCollectClient = AnimeCollectClient(mapper, RestTemplate(), MalProvider(clientId))
-        context("/mal", MalController(animeCollectClient))
+        val animeClient = AnimeClient(mapper, RestTemplate(), MalProvider(clientId))
+        val animePollClient = AnimePollClient(mapper, RestTemplate(), MalProvider(clientId))
+        context("/mal", MalController(animeClient, animePollClient))
         context("/", DefaultController())
     }
 

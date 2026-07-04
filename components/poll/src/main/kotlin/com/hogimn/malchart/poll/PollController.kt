@@ -17,8 +17,9 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
             if (record != null) {
                 mapper.writeValueAsString(record.toPollInfo("poll info"))
             } else {
-                throw IllegalStateException("Poll with id $contentId pollOptionId $pollOptionId " +
-                        "topicId $topicId not found")
+                throw IllegalStateException(
+                    "Poll with id $contentId pollOptionId $pollOptionId topicId $topicId not found"
+                )
             }
         } || post(exchange, "/poll", mediaTypes) {
             val request = mapper.readValue(body(exchange), PollInfo::class.java)
@@ -49,9 +50,24 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
                 val record = gateway.findObject(request.contentId, request.topicId, request.pollOptionId)!!
                 mapper.writeValueAsString(record.toPollInfo("poll updated"))
             } else {
-                throw IllegalStateException("Poll with id ${request.contentId} pollOptionId " +
-                        "${request.pollOptionId} topicId ${request.topicId} not found to update")
+                throw IllegalStateException(
+                    "Poll with id ${request.contentId} pollOptionId " +
+                            "${request.pollOptionId} topicId ${request.topicId} not found to update"
+                )
             }
+        } || post(exchange, "/poll/upsert", mediaTypes) {
+            val request = mapper.readValue(body(exchange), PollInfo::class.java)
+
+            val record = gateway.upsert(
+                contentId = request.contentId,
+                topicId = request.topicId,
+                pollOptionId = request.pollOptionId,
+                title = request.title,
+                episode = request.episode,
+                votes = request.votes
+            )
+
+            mapper.writeValueAsString(record.toPollInfo("poll upserted"))
         }
     }
 

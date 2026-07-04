@@ -13,7 +13,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Date
 
-class AnimeCollectClient(val mapper: ObjectMapper, val template: RestTemplate, val malProvider: MalProvider) {
+class AnimeClient(val mapper: ObjectMapper, val template: RestTemplate, val malProvider: MalProvider) {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val circuitBreaker = CircuitBreaker()
 
@@ -50,6 +50,8 @@ class AnimeCollectClient(val mapper: ObjectMapper, val template: RestTemplate, v
                 logger.error("Error processing anime. Skipping to the next item. Details: {}", e.message, e);
             }
         }
+
+        logger.info("End collecting $year/$season")
     }
 
     private fun fallback(): () -> Nothing? = { null }

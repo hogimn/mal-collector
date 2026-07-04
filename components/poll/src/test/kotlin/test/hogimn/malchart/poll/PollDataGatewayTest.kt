@@ -134,4 +134,47 @@ class PollDataGatewayTest {
                     || updatedRecord.updatedAt.isEqual(updatedRecord.createdAt)
         )
     }
+
+    @Test
+    fun testUpsert() {
+        val contentId = 1234
+        val topicId = 555
+        val pollOptionId = 9
+
+        val insertedRecord = gateway.upsert(
+            contentId = contentId,
+            topicId = topicId,
+            pollOptionId = pollOptionId,
+            title = "First Initial Title",
+            episode = 1,
+            votes = 50
+        )
+
+        assertEquals("First Initial Title", insertedRecord.title)
+        assertEquals(50, insertedRecord.votes)
+
+        val dbRecordAfterInsert = gateway.findObject(contentId, topicId, pollOptionId)
+        assertNotNull(dbRecordAfterInsert)
+        assertEquals("First Initial Title", dbRecordAfterInsert.title)
+        assertEquals(50, dbRecordAfterInsert.votes)
+
+        val updatedRecord = gateway.upsert(
+            contentId = contentId,
+            topicId = topicId,
+            pollOptionId = pollOptionId,
+            title = "Upserted/Updated Title",
+            episode = 2,
+            votes = 150
+        )
+
+        assertEquals("Upserted/Updated Title", updatedRecord.title)
+        assertEquals(2, updatedRecord.episode)
+        assertEquals(150, updatedRecord.votes)
+
+        val dbRecordAfterUpsert = gateway.findObject(contentId, topicId, pollOptionId)
+        assertNotNull(dbRecordAfterUpsert)
+        assertEquals("Upserted/Updated Title", dbRecordAfterUpsert.title)
+        assertEquals(2, dbRecordAfterUpsert.episode)
+        assertEquals(150, dbRecordAfterUpsert.votes)
+    }
 }

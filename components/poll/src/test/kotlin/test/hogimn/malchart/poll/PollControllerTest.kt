@@ -129,4 +129,83 @@ class PollControllerTest : TestControllerSupport() {
         val originalTime = LocalDateTime.of(2026, 6, 28, 21, 0, 0)
         assert(actual.updatedAt!!.isAfter(originalTime))
     }
+
+    @Test
+    fun testUpsertCreate() {
+        val upsertPoll = PollInfo(
+            contentId = 6666,
+            topicId = 303,
+            pollOptionId = 3,
+            title = "Brave New World",
+            episode = 10,
+            votes = 5000
+        )
+        val requestBody = mapper.writeValueAsString(upsertPoll)
+
+        val response = template.post(
+            "http://localhost:8081/poll/upsert",
+            "application/json",
+            requestBody
+        )
+
+        val actual: PollInfo = mapper.readValue(response, object : TypeReference<PollInfo>() {})
+        assertEquals(6666, actual.contentId)
+        assertEquals(303, actual.topicId)
+        assertEquals(3, actual.pollOptionId)
+        assertEquals("Brave New World", actual.title)
+        assertEquals(10, actual.episode)
+        assertEquals(5000, actual.votes)
+        assertEquals("poll upserted", actual.info)
+        assertNotNull(actual.createdAt)
+        assertNotNull(actual.updatedAt)
+
+        val getResponse = template.get(
+            "http://localhost:8081/poll",
+            "application/json",
+            Pair("contentId", "6666"),
+            Pair("topicId", "303"),
+            Pair("pollOptionId", "3")
+        )
+        val dbActual: PollInfo = mapper.readValue(getResponse, object : TypeReference<PollInfo>() {})
+        assertEquals("Brave New World", dbActual.title)
+        assertEquals(5000, dbActual.votes)
+    }
+
+    @Test
+    fun testUpsertUpdate() {
+        TestScenarioSupport(dataSource).loadTestScenario("jacks-test-scenario")
+
+        val upsertPoll = PollInfo(
+            contentId = 4765,
+            topicId = 101,
+            pollOptionId = 1,
+            title = "Upsert Updated Title: The Fall of Shiganshina, Part 1",
+            episode = 1,
+            votes = 20000,
+        )
+        val requestBody = mapper.writeValueAsString(upsertPoll)
+
+        val response = template.post(
+            "http://localhost:8081/poll/upsert",
+            "application/json",
+            requestBody
+        )
+
+        val actual: PollInfo = mapper.readValue(response, object : TypeReference<PollInfo>() {})
+        assertEquals(4765, actual.contentId)
+        assertEquals("Upsert Updated Title: The Fall of Shiganshina, Part 1", actual.title)
+        assertEquals(20000, actual.votes)
+        assertEquals("poll upserted", actual.info)
+
+        val getResponse = template.get(
+            "http://localhost:8081/poll",
+            "application/json",
+            Pair("contentId", "4765"),
+            Pair("topicId", "101"),
+            Pair("pollOptionId", "1")
+        )
+        val dbActual: PollInfo = mapper.readValue(getResponse, object : TypeReference<PollInfo>() {})
+        assertEquals("Upsert Updated Title: The Fall of Shiganshina, Part 1", dbActual.title)
+        assertEquals(20000, dbActual.votes)
+    }
 }

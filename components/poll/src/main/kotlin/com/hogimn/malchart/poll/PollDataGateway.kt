@@ -21,6 +21,16 @@ class PollDataGateway(val jdbcTemplate: JdbcTemplate) {
         where content_id = ? and topic_id = ? and poll_option_id = ?
     """.trimIndent()
 
+    val upsertSql = """
+        insert into poll (content_id, topic_id, poll_option_id, title, episode, votes, created_at, updated_at) 
+        values (?, ?, ?, ?, ?, ?, ?, ?)
+        on duplicate key update
+            title = values(title),
+            episode = values(episode),
+            votes = values(votes),
+            updated_at = values(updated_at)
+    """.trimIndent()
+
     fun create(
         contentId: Int,
         topicId: Int,
@@ -70,6 +80,23 @@ class PollDataGateway(val jdbcTemplate: JdbcTemplate) {
             updateSql,
             title, episode, votes, now,
             contentId, topicId, pollOptionId
+        )
+    }
+
+    fun upsert(
+        contentId: Int,
+        topicId: Int,
+        pollOptionId: Int,
+        title: String,
+        episode: Int,
+        votes: Int,
+    ): PollRecord {
+        val now = LocalDateTime.now()
+
+        return jdbcTemplate.create(
+            upsertSql,
+            { PollRecord(contentId, topicId, pollOptionId, title, episode, votes, now, now) },
+            contentId, topicId, pollOptionId, title, episode, votes, now, now
         )
     }
 }
