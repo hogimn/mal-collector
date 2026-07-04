@@ -7,14 +7,13 @@ import com.hogimn.malchart.malsupport.MalProvider
 import com.hogimn.malchart.restsupport.RestTemplate
 import dev.katsute.mal4j.anime.Anime
 import dev.katsute.mal4j.anime.property.time.Season
-import org.slf4j.LoggerFactory
 import java.lang.Thread.sleep
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Date
 
 class AnimeClient(val mapper: ObjectMapper, val template: RestTemplate, val malProvider: MalProvider) {
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = AppLoggerFactory.getLogger(javaClass)
     private val circuitBreaker = CircuitBreaker()
 
     fun collectByYearAndSeason(year: Int, season: String) {

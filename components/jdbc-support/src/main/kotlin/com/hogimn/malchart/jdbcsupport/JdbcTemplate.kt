@@ -13,26 +13,17 @@ import javax.sql.DataSource
 
 class JdbcTemplate(val dataSource: DataSource) {
 
+    private val logger = AppLoggerFactory.getLogger(javaClass)
+
     fun <T> createWithGeneratedKeys(sql: String, id: (Long) -> T, vararg params: Any) =
         dataSource.connection.use { connection ->
             createWithGeneratedKeys(connection, sql, id, *params)
         }
 
     fun <T> createWithGeneratedKeys(connection: Connection, sql: String, id: (Long) -> T, vararg params: Any): T {
+        logSql(sql, params)
         return connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS).use { statement ->
-            for (i in params.indices) {
-                val param = params[i]
-                val parameterIndex = i + 1
-
-                when (param) {
-                    is String -> statement.setString(parameterIndex, param)
-                    is Int -> statement.setInt(parameterIndex, param)
-                    is Long -> statement.setLong(parameterIndex, param)
-                    is Boolean -> statement.setBoolean(parameterIndex, param)
-                    is LocalDate -> statement.setDate(parameterIndex, Date.valueOf(param))
-
-                }
-            }
+            bindParams(statement, params)
             statement.executeUpdate()
             val keys = statement.generatedKeys
             keys.next()
@@ -46,6 +37,7 @@ class JdbcTemplate(val dataSource: DataSource) {
         }
 
     fun <T> create(connection: Connection, sql: String, resultSupplier: () -> T, vararg params: Any): T {
+        logSql(sql, params)
         return connection.prepareStatement(sql).use { statement ->
             bindParams(statement, params)
             statement.executeUpdate()
@@ -72,18 +64,18 @@ class JdbcTemplate(val dataSource: DataSource) {
     }
 
     fun <T> findObject(sql: String, mapper: (ResultSet) -> T, id: Long): T? {
-        val list = query(sql, { ps -> ps.setLong(1, id) }, mapper)
+        val list = query(sql, { ps -> ps.setLong(1, id) }, mapper, arrayOf(id))
         return when {
             list.isEmpty() -> null
-
             else -> list.first()
         }
     }
 
-    fun <T> findBy(sql: String, mapper: (ResultSet) -> T, id: Long) = query(sql, { ps -> ps.setLong(1, id) }, mapper)
+    fun <T> findBy(sql: String, mapper: (ResultSet) -> T, id: Long) =
+        query(sql, { ps -> ps.setLong(1, id) }, mapper, arrayOf(id))
 
     fun <T> findObject(sql: String, mapper: (ResultSet) -> T, vararg params: Any): T? {
-        val list = query(sql, { ps -> bindParams(ps, params) }, mapper)
+        val list = query(sql, { ps -> bindParams(ps, params) }, mapper, params)
         return when {
             list.isEmpty() -> null
             else -> list.first()
@@ -91,7 +83,7 @@ class JdbcTemplate(val dataSource: DataSource) {
     }
 
     fun <T> findBy(sql: String, mapper: (ResultSet) -> T, vararg params: Any) =
-        query(sql, { ps -> bindParams(ps, params) }, mapper)
+        query(sql, { ps -> bindParams(ps, params) }, mapper, params)
 
     fun update(sql: String, vararg params: Any): Int =
         dataSource.connection.use { connection ->
@@ -99,6 +91,7 @@ class JdbcTemplate(val dataSource: DataSource) {
         }
 
     fun update(connection: Connection, sql: String, vararg params: Any): Int {
+        logSql(sql, params)
         return connection.prepareStatement(sql).use { statement ->
             bindParams(statement, params)
             statement.executeUpdate()
@@ -108,17 +101,24 @@ class JdbcTemplate(val dataSource: DataSource) {
     /// USED FOR TESTING
 
     fun execute(sql: String) {
+        logSql(sql)
         dataSource.connection.use { connection ->
             connection.prepareCall(sql).use(CallableStatement::execute)
         }
     }
 
-    fun <T> query(sql: String, params: (PreparedStatement) -> Unit, mapper: (ResultSet) -> T): List<T> {
+    fun <T> query(
+        sql: String,
+        paramsBind: (PreparedStatement) -> Unit,
+        mapper: (ResultSet) -> T,
+        logParams: Array<out Any> = emptyArray()
+    ): List<T> {
+        logSql(sql, logParams)
         val results = ArrayList<T>()
 
         dataSource.connection.use { connection ->
             connection.prepareStatement(sql).use { statement ->
-                params(statement)
+                paramsBind(statement)
                 statement.executeQuery().use { rs ->
                     while (rs.next()) {
                         results.add(mapper(rs))
@@ -127,5 +127,13 @@ class JdbcTemplate(val dataSource: DataSource) {
             }
         }
         return results
+    }
+
+    private fun logSql(sql: String, params: Array<out Any> = emptyArray()) {
+        logger.info("[Q] $sql")
+        if (params.isNotEmpty()) {
+            val paramsString = params.joinToString(",") { "[$it]" }
+            logger.info("[QP] $paramsString")
+        }
     }
 }

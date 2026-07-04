@@ -4,6 +4,7 @@ dependencies {
     implementation(project(":components:test-support"))
     implementation(project(":components:circuit-breaker-support"))
     implementation(project(":components:discovery-support"))
+    implementation(project(":components:log-support"))
 
     testImplementation("com.zaxxer:HikariCP:$hikari_version")
     testImplementation("com.mysql:mysql-connector-j:$mysql_connector_version")

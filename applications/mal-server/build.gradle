@@ -1,6 +1,7 @@
 dependencies {
     implementation(project(":components:discovery-support"))
     implementation(project(":components:rest-support"))
+    implementation(project(":components:log-support"))
 
     implementation(project(":components:mal"))
     implementation(project(":components:mal-support"))

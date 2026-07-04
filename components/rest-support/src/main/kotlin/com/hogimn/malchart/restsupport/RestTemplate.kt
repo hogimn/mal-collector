@@ -1,6 +1,5 @@
 package com.hogimn.malchart.restsupport
 
-import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
@@ -10,7 +9,7 @@ import java.nio.charset.StandardCharsets
 
 class RestTemplate {
     private val client = HttpClient.newHttpClient()
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = AppLoggerFactory.getLogger(javaClass)
 
     fun get(endpoint: String, accept: String, vararg pairs: Pair<String, String>): String {
         val query = pairs.joinToString("&") { (name, value) ->
@@ -44,14 +43,14 @@ class RestTemplate {
 
     private fun execute(request: HttpRequest, body: String? = null): String {
         if (body.isNullOrEmpty()) {
-            logger.info("Sending Request -> [${request.method()}] ${request.uri()} (No Body)")
+            logger.info("[S] Sending Request -> [${request.method()}] ${request.uri()} (No Body)")
         } else {
-            logger.info("Sending Request -> [${request.method()}] ${request.uri()}, Body: $body")
+            logger.info("[S] Sending Request -> [${request.method()}] ${request.uri()}, Body: $body")
         }
 
         val response = client.send(request, HttpResponse.BodyHandlers.ofString())
 
-        logger.info("Received Response - Status: ${response.statusCode()}, Body: ${response.body()}")
+        logger.info("[R] Received Response - Status: ${response.statusCode()}, Body: ${response.body()}")
 
         if (response.statusCode() >= 300) {
             return "status_code ${response.statusCode()}"

@@ -1,12 +1,11 @@
 package com.hogimn.malchart.restsupport
 
 import com.sun.net.httpserver.HttpExchange
-import org.slf4j.LoggerFactory
 import java.net.URLDecoder
 import java.sql.SQLException
 
 abstract class BasicController {
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = AppLoggerFactory.getLogger(javaClass)
 
     abstract fun handle(exchange: HttpExchange): Boolean
 
@@ -57,9 +56,9 @@ abstract class BasicController {
 
     private fun sendResponse(exchange: HttpExchange, status: Int, body: String) {
         if (body.isEmpty()) {
-            logger.info("Sending response - Status: $status (No Body)")
+            logger.info("[S] Sending response - Status: $status (No Body)")
         } else {
-            logger.info("Sending response - Status: $status, Body: $body")
+            logger.info("[S] Sending response - Status: $status, Body: $body")
         }
 
         val bytes = body.toByteArray()

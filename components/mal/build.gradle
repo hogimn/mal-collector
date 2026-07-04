@@ -5,6 +5,7 @@ dependencies {
     implementation(project(":components:rest-support"))
     implementation(project(":components:test-support"))
     implementation(project(":components:mal-support"))
+    implementation(project(":components:log-support"))
     implementation("dev.katsute:mal4j:$mal4j_version")
 
     testImplementation("com.zaxxer:HikariCP:$hikari_version")

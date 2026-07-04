@@ -7,11 +7,10 @@ import com.hogimn.malchart.discovery.DiscoveryClient
 import com.hogimn.malchart.malsupport.MalProvider
 import com.hogimn.malchart.restsupport.RestTemplate
 import dev.katsute.mal4j.forum.ForumTopic
-import org.slf4j.LoggerFactory
 import java.lang.Thread.sleep
 
 class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val malProvider: MalProvider) {
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = AppLoggerFactory.getLogger(javaClass)
     private val circuitBreaker = CircuitBreaker()
 
     val pollOptionMap: Map<String, Int> = mapOf(

@@ -4,4 +4,5 @@ dependencies {
     implementation(project(":components:redis-support"))
     implementation(project(":components:rest-support"))
     implementation(project(":components:test-support"))
+    implementation(project(":components:log-support"))
 }

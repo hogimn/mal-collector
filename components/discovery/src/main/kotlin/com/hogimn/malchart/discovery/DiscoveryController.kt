@@ -3,10 +3,9 @@ package com.hogimn.malchart.discovery
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.sun.net.httpserver.HttpExchange
 import com.hogimn.malchart.restsupport.BasicController
-import org.slf4j.LoggerFactory
 
 class DiscoveryController(val mapper: ObjectMapper, val gateway: InstanceDataGateway) : BasicController() {
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = AppLoggerFactory.getLogger(javaClass)
 
     override fun handle(exchange: HttpExchange): Boolean {
         return post(exchange, "/discovery/apps", listOf("application/json")) {

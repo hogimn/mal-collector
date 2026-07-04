@@ -3,11 +3,10 @@ package com.hogimn.malchart.discovery
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.hogimn.malchart.restsupport.RestTemplate
-import org.slf4j.LoggerFactory
 import java.util.*
 
 open class DiscoveryClient(val mapper: ObjectMapper, val template: RestTemplate) {
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = AppLoggerFactory.getLogger(javaClass)
 
     private fun <E> List<E>.random(random: Random): E? = if (isNotEmpty()) get(random.nextInt(size)) else null
 
