@@ -31,7 +31,6 @@ abstract class BasicController {
 
         try {
             exchange.responseHeaders.add("Content-Type", acceptedMediaType)
-            logger.info("Received $method request at $uri")
             sendResponse(exchange, successStatus, block())
         } catch (e: IllegalStateException) {
             sendResponse(exchange, 422, e.message.toString())
@@ -41,6 +40,7 @@ abstract class BasicController {
             logger.error(e.message, e)
             sendResponse(exchange, 500, e.message.toString())
         }
+
         return true
     }
 
@@ -56,6 +56,12 @@ abstract class BasicController {
     protected fun body(exchange: HttpExchange): String = exchange.getAttribute("body") as String
 
     private fun sendResponse(exchange: HttpExchange, status: Int, body: String) {
+        if (body.isEmpty()) {
+            logger.info("Sending response - Status: $status (No Body)")
+        } else {
+            logger.info("Sending response - Status: $status, Body: $body")
+        }
+
         val bytes = body.toByteArray()
         exchange.sendResponseHeaders(status, bytes.size.toLong())
         exchange.responseBody.write(bytes)

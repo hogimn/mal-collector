@@ -25,8 +25,6 @@ open class DiscoveryClient(val mapper: ObjectMapper, val template: RestTemplate)
     }
 
     fun heartbeat(appId: String, url: String) {
-        logger.info("Sending heartbeat $appId at $url")
-
         val endpoint = System.getenv("DISCOVERY_SERVER_ENDPOINT")
         try {
             val newUrl = if(url.last() == '/') url.dropLast(1) else url

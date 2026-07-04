@@ -24,11 +24,18 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
 
     fun collectByYearAndSeason(year: Int, season: String) {
         logger.info("Start collecting anime poll $year/$season")
+
         val animeList = findSeasonalAnime(year, season) ?: return
-        for (anime in animeList) {
+
+        logger.info("Found ${animeList.size} anime titles for $year/$season")
+
+        animeList.forEachIndexed { index, anime ->
+            logger.info("[${index + 1}/${animeList.size}] Collecting poll for: ${anime.title}")
+
             sleep(2000)
             collectPoll(anime)
         }
+
         logger.info("End collecting anime poll $year/$season")
     }
 
