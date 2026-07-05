@@ -9,7 +9,13 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
     override fun handle(exchange: HttpExchange): Boolean {
         val mediaTypes = listOf("application/json", "application/vnd.malchart.v1+json")
 
-        return get(exchange, "/poll", mediaTypes) {
+        return get(
+            exchange, "/poll", mediaTypes,
+            { params ->
+                params.containsKey("contentId") && params.containsKey("contentType")
+                        && params.containsKey("topicId") && params.containsKey("pollOptionId")
+            },
+        ) {
             val contentId = parameters(exchange)["contentId"]!!
             val contentType = parameters(exchange)["contentType"]!!
             val topicId = parameters(exchange)["topicId"]!!
@@ -22,7 +28,12 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
                     "Poll with id $contentId contentType $contentType pollOptionId $pollOptionId topicId $topicId not found"
                 )
             }
-        } || get(exchange, "/poll/by-contentid", mediaTypes) {
+        } || get(
+            exchange, "/poll", mediaTypes,
+            { params ->
+                params.containsKey("contentId") && params.containsKey("contentType")
+            },
+        ) {
             val contentId = parameters(exchange)["contentId"]!!
             val contentType = parameters(exchange)["contentType"]!!
             val records = gateway.findByContentId(contentId.toInt(), contentType)

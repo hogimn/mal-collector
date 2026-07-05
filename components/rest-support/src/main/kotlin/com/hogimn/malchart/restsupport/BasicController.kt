@@ -9,23 +9,59 @@ abstract class BasicController {
 
     abstract fun handle(exchange: HttpExchange): Boolean
 
-    protected fun get(exchange: HttpExchange, uri: String, supportedMediaTypes: List<String>, block: () -> String): Boolean {
-        return respond(exchange, "GET", uri, supportedMediaTypes, 200, block)
+    protected fun get(
+        exchange: HttpExchange,
+        uri: String,
+        supportedMediaTypes: List<String>,
+        condition: (Map<String, String>) -> Boolean = { true },
+        block: () -> String
+    ): Boolean {
+        if (!matchRoute(exchange, "GET", uri, condition)) return false
+        return respond(exchange, supportedMediaTypes, 200, block)
     }
 
-    protected fun post(exchange: HttpExchange, uri: String, supportedMediaTypes: List<String>, block: () -> String): Boolean {
-        return respond(exchange, "POST", uri, supportedMediaTypes, 201, block)
+    protected fun post(
+        exchange: HttpExchange,
+        uri: String,
+        supportedMediaTypes: List<String>,
+        condition: (Map<String, String>) -> Boolean = { true },
+        block: () -> String
+    ): Boolean {
+        if (!matchRoute(exchange, "POST", uri, condition)) return false
+        return respond(exchange, supportedMediaTypes, 201, block)
     }
 
-    protected fun put(exchange: HttpExchange, uri: String, supportedMediaTypes: List<String>, block: () -> String): Boolean {
-        return respond(exchange, "PUT", uri, supportedMediaTypes, 200, block)
+    protected fun put(
+        exchange: HttpExchange,
+        uri: String,
+        supportedMediaTypes: List<String>,
+        condition: (Map<String, String>) -> Boolean = { true },
+        block: () -> String
+    ): Boolean {
+        if (!matchRoute(exchange, "PUT", uri, condition)) return false
+        return respond(exchange, supportedMediaTypes, 200, block)
     }
 
-    private fun respond(exchange: HttpExchange, method: String, uri: String, supportedMediaTypes: List<String>, successStatus: Int, block: () -> String): Boolean {
-        val acceptedMediaType = exchange.requestHeaders.getFirst("Accept")
-
+    private fun matchRoute(
+        exchange: HttpExchange,
+        method: String,
+        uri: String,
+        condition: (Map<String, String>) -> Boolean
+    ): Boolean {
         if (exchange.requestMethod != method) return false
         if (exchange.requestURI.path != uri) return false
+        if (!condition(parameters(exchange))) return false
+        return true
+    }
+
+    private fun respond(
+        exchange: HttpExchange,
+        supportedMediaTypes: List<String>,
+        successStatus: Int,
+        block: () -> String
+    ): Boolean {
+        val acceptedMediaType = exchange.requestHeaders.getFirst("Accept")
+
         if (acceptedMediaType !in supportedMediaTypes) return false
 
         try {

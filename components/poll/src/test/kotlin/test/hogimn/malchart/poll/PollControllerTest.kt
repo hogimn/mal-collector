@@ -76,7 +76,7 @@ class PollControllerTest : TestControllerSupport() {
         TestScenarioSupport(dataSource).loadTestScenario("jacks-test-scenario")
 
         val response = template.get(
-            "http://localhost:8081/poll/by-contentid",
+            "http://localhost:8081/poll",
             "application/json",
             Pair("contentId", "4765"),
             Pair("contentType", "anime"),

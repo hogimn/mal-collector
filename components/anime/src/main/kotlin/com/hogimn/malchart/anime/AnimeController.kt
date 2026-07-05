@@ -8,7 +8,9 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) :
     override fun handle(exchange: HttpExchange): Boolean {
         val mediaTypes = listOf("application/json", "application/vnd.malchart.v1+json")
 
-        return get(exchange, "/anime", mediaTypes) {
+        return get(
+            exchange, "/anime", mediaTypes,
+            { params -> params.containsKey("id") }) {
             val id = parameters(exchange)["id"]!!
             val record = gateway.findObject(id.toInt())
             if (record != null) {
@@ -16,7 +18,9 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) :
             } else {
                 throw IllegalStateException("Anime with id $id not found")
             }
-        } || get(exchange, "/anime/by-year-and-season", mediaTypes) {
+        } || get(
+            exchange, "/anime", mediaTypes,
+            { params -> params.containsKey("year") && params.containsKey("season") }) {
             val year = parameters(exchange)["year"]!!.toInt()
             val season = parameters(exchange)["season"]!!
             val records = gateway.findByYearAndSeason(year, season)
@@ -97,7 +101,7 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) :
             mapper.writeValueAsString(newRecord.toAnimeInfo("anime created"))
         } || post(
             exchange,
-        "/anime/upsert",
+            "/anime/upsert",
             listOf("application/json", "application/vnd.malchart.v1+json")
         ) {
             val inputData = mapper.readValue(body(exchange), AnimeInfo::class.java)

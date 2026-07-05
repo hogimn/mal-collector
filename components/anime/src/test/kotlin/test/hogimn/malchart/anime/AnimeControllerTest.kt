@@ -95,7 +95,7 @@ class AnimeControllerTest : TestControllerSupport() {
         )
 
         val response =
-            template.get("http://localhost:8081/anime/by-year-and-season", "application/json", *params.toTypedArray())
+            template.get("http://localhost:8081/anime", "application/json", *params.toTypedArray())
 
         val actual: List<AnimeInfo> =
             mapper.readValue(response, object : TypeReference<List<AnimeInfo>>() {})
