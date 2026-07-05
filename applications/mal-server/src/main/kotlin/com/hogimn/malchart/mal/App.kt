@@ -1,6 +1,7 @@
 package com.hogimn.malchart.mal
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.hogimn.malchart.discovery.DiscoveryClient
@@ -14,7 +15,10 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class App(port: Int) : BasicServer(port) {
-    val mapper: ObjectMapper = ObjectMapper().registerKotlinModule().registerModule(JavaTimeModule())
+    val mapper: ObjectMapper = ObjectMapper()
+        .registerKotlinModule()
+        .registerModule(JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     val clientId: String = getenv("MAL_CLIENT_ID")
 
     override fun registerContexts() {
