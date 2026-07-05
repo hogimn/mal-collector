@@ -12,10 +12,7 @@ class RestTemplate {
     private val logger = AppLoggerFactory.getLogger(javaClass)
 
     fun get(endpoint: String, accept: String, vararg pairs: Pair<String, String>): String {
-        val query = pairs.joinToString("&") { (name, value) ->
-            "${encode(name)}=${encode(value)}"
-        }
-        val uri = if (query.isEmpty()) URI(endpoint) else URI("$endpoint?$query")
+        val uri = buildUri(endpoint, pairs)
         val request = HttpRequest.newBuilder(uri)
             .header("Accept", accept)
             .GET()
@@ -24,21 +21,41 @@ class RestTemplate {
     }
 
     fun post(endpoint: String, accept: String, data: String): String {
-        val request = HttpRequest.newBuilder(URI(endpoint))
+        return post(endpoint, accept, data, *arrayOf())
+    }
+
+    fun post(endpoint: String, accept: String, data: String, vararg pairs: Pair<String, String>): String {
+        val uri = buildUri(endpoint, pairs)
+        val request = HttpRequest.newBuilder(uri)
             .header("Accept", accept)
-            .header("Content-type", "application/json")
+            .header("Content-Type", "application/json") // 대문자 T 통일
             .POST(HttpRequest.BodyPublishers.ofString(data))
             .build()
         return execute(request, data)
     }
 
     fun put(endpoint: String, accept: String, data: String): String {
-        val request = HttpRequest.newBuilder(URI(endpoint))
+        return put(endpoint, accept, data, *arrayOf())
+    }
+
+    fun put(endpoint: String, accept: String, data: String, vararg pairs: Pair<String, String>): String {
+        val uri = buildUri(endpoint, pairs)
+        val request = HttpRequest.newBuilder(uri)
             .header("Accept", accept)
             .header("Content-Type", "application/json")
             .PUT(HttpRequest.BodyPublishers.ofString(data))
             .build()
         return execute(request, data)
+    }
+
+    private fun buildUri(endpoint: String, pairs: Array<out Pair<String, String>>): URI {
+        if (pairs.isEmpty()) return URI(endpoint)
+
+        val query = pairs.joinToString("&") { (name, value) ->
+            "${encode(name)}=${encode(value)}"
+        }
+
+        return URI("$endpoint?$query")
     }
 
     private fun execute(request: HttpRequest, body: String? = null): String {

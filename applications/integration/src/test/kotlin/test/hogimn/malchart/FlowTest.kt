@@ -37,20 +37,20 @@ class FlowTest {
         }
 
         discovery = runCommand(
-            8880,
+            8890,
             "discovery",
             "java -jar $userDir/../discovery-server/build/libs/discovery-server.jar",
             File(userDir)
         )
 
         anime = runCommand(
-            8881,
+            8891,
             "anime",
             "java -jar $userDir/../anime-server/build/libs/anime-server.jar",
             File(userDir)
         )
         poll = runCommand(
-            8882,
+            8892,
             "poll",
             "java -jar $userDir/../poll-server/build/libs/poll-server.jar",
             File(userDir)
@@ -66,15 +66,15 @@ class FlowTest {
 
     @Test
     fun testBasicFlow() {
-        listOf(8880, 8881, 8882).forEach { waitUntilReady("http://localhost:$it") }
+        listOf(8890, 8891, 8892).forEach { waitUntilReady("http://localhost:$it") }
 
         var response: String?
 
-        val discoveryServer = "http://localhost:8880"
+        val discoveryServer = "http://localhost:8890"
         response = template.get(discoveryServer, "application/json")
         assertEquals("Noop!", response)
 
-        val animeServer = "http://localhost:8881"
+        val animeServer = "http://localhost:8891"
 
         response = template.get(animeServer, "application/json")
         assertEquals("Noop!", response)
@@ -116,7 +116,7 @@ class FlowTest {
         response = template.get("$animeServer/anime", "application/json", Pair("id", animeId))
         assert(response.contains("New E2E Test Anime"))
 
-        val pollServer = "http://localhost:8882"
+        val pollServer = "http://localhost:8892"
 
         response = template.get(pollServer, "application/json")
         assertEquals("Noop!", response)
@@ -174,7 +174,7 @@ class FlowTest {
             "jdbc:mysql://localhost:3306/${services}_test?user=uservices&password=uservices"
         builder.environment()["REDIS_HOST"] = "localhost"
         builder.environment()["REDIS_PASSWORD"] = "foobared"
-        builder.environment()["DISCOVERY_SERVER_ENDPOINT"] = "http://localhost:8880"
+        builder.environment()["DISCOVERY_SERVER_ENDPOINT"] = "http://localhost:8890"
         return builder.start()
     }
 }

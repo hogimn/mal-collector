@@ -5,7 +5,7 @@ import org.slf4j.event.Level
 import org.slf4j.spi.LoggingEventBuilder
 
 class AppLogger(private val delegate: Logger) : Logger by delegate {
-    private val prefixes = listOf("[A]", "[S]", "[R]", "[Q]", "[QP]")
+    private val prefixes = listOf("[A]", "[S]", "[R]", "[Q]", "[QP]", "[Z]")
 
     private fun resolveInfoMessage(msg: String?): String? {
         if (msg == null) return null

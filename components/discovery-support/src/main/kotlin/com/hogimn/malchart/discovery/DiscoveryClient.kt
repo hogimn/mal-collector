@@ -10,7 +10,7 @@ open class DiscoveryClient(val mapper: ObjectMapper, val template: RestTemplate)
 
     private fun <E> List<E>.random(random: Random): E? = if (isNotEmpty()) get(random.nextInt(size)) else null
 
-    fun getUrl(appId: String): String? {
+    open fun getUrl(appId: String): String? {
         val endpoint = System.getenv("DISCOVERY_SERVER_ENDPOINT")
         val response = template.get("$endpoint/discovery/apps", "application/json", Pair("appId", appId))
         val instances: List<InstanceInfo> = mapper.readValue(response, object : TypeReference<List<InstanceInfo>>() {})

@@ -54,11 +54,11 @@ abstract class BasicController {
 
     protected fun body(exchange: HttpExchange): String = exchange.getAttribute("body") as String
 
-    private fun sendResponse(exchange: HttpExchange, status: Int, body: String) {
+    protected fun sendResponse(exchange: HttpExchange, status: Int, body: String) {
         if (body.isEmpty()) {
-            logger.info("[S] Sending response - Status: $status (No Body)")
+            logger.info("[Z] Sending response - Status: $status (No Body)")
         } else {
-            logger.info("[S] Sending response - Status: $status, Body: $body")
+            logger.info("[Z] Sending response - Status: $status, Body: $body")
         }
 
         val bytes = body.toByteArray()

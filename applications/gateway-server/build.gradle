@@ -1,0 +1,19 @@
+dependencies {
+    implementation(project(":components:discovery-support"))
+    implementation(project(":components:rest-support"))
+    implementation(project(":components:log-support"))
+
+    implementation(project(":components:gateway"))
+
+    implementation("ch.qos.logback:logback-classic:$logback_version")
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "com.hogimn.malchart.gateway.AppKt"
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
