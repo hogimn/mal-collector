@@ -101,6 +101,33 @@ class PollDataGatewayTest {
     }
 
     @Test
+    fun testFindByContent() {
+        val contentId = 7777
+        val contentType = "manga"
+        val topicId = 202
+        val pollOptionId = 3
+
+        val insertSql = """
+            insert into poll (content_id, content_type, topic_id, poll_option_id, title, episode, votes, created_at, updated_at)
+            values ($contentId, '$contentType', $topicId, $pollOptionId, 'Test Poll Title', 5, 99, NOW(), NOW())
+        """.trimIndent()
+
+        template.execute(insertSql)
+
+        val result = gateway.findByContentId(contentId, contentType)
+        val firstResult = result.first()
+
+        assertEquals(1, result.size)
+        assertEquals(contentId, firstResult.contentId)
+        assertEquals(contentType, firstResult.contentType)
+        assertEquals(topicId, firstResult.topicId)
+        assertEquals(pollOptionId, firstResult.pollOptionId)
+        assertEquals("Test Poll Title", firstResult.title)
+        assertEquals(5, firstResult.episode)
+        assertEquals(99, firstResult.votes)
+    }
+
+    @Test
     fun testUpdate() {
         val contentId = 4765
         val contentType = "anime"

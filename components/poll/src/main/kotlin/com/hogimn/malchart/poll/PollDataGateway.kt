@@ -1,6 +1,7 @@
 package com.hogimn.malchart.poll
 
 import com.hogimn.malchart.jdbcsupport.JdbcTemplate
+import java.sql.ResultSet
 import java.time.LocalDateTime
 
 class PollDataGateway(val jdbcTemplate: JdbcTemplate) {
@@ -8,6 +9,13 @@ class PollDataGateway(val jdbcTemplate: JdbcTemplate) {
         select content_id, content_type, topic_id, poll_option_id, title, episode, votes, created_at, updated_at
         from poll
         where content_id = ? and content_type = ? and poll_option_id = ? and topic_id = ?
+    """.trimIndent()
+
+    val selectListSql = """
+        select content_id, content_type, topic_id, poll_option_id, title, episode, votes, created_at, updated_at
+        from poll
+        where content_id = ? and content_type = ?
+        order by episode, poll_option_id
     """.trimIndent()
 
     val createSql = """
@@ -64,20 +72,16 @@ class PollDataGateway(val jdbcTemplate: JdbcTemplate) {
     fun findObject(contentId: Int, contentType: String, topicId: Int, pollOptionId: Int): PollRecord? {
         return jdbcTemplate.findObject(
             selectSql,
-            { rs ->
-                PollRecord(
-                    contentId = rs.getInt("content_id"),
-                    contentType = rs.getString("content_type"),
-                    topicId = rs.getInt("topic_id"),
-                    pollOptionId = rs.getInt("poll_option_id"),
-                    title = rs.getString("title"),
-                    episode = rs.getInt("episode"),
-                    votes = rs.getInt("votes"),
-                    createdAt = rs.getTimestamp("created_at").toLocalDateTime(),
-                    updatedAt = rs.getTimestamp("updated_at").toLocalDateTime()
-                )
-            },
+            ::mapRow,
             contentId, contentType, pollOptionId, topicId
+        )
+    }
+
+    fun findByContentId(contentId: Int, contentType: String): List<PollRecord> {
+        return jdbcTemplate.findList(
+            selectListSql,
+            ::mapRow,
+            contentId, contentType
         )
     }
 
@@ -125,6 +129,20 @@ class PollDataGateway(val jdbcTemplate: JdbcTemplate) {
                 )
             },
             contentId, contentType, topicId, pollOptionId, title, episode, votes, now, now
+        )
+    }
+
+    private fun mapRow(rs: ResultSet): PollRecord {
+        return PollRecord(
+            contentId = rs.getInt("content_id"),
+            contentType = rs.getString("content_type"),
+            topicId = rs.getInt("topic_id"),
+            pollOptionId = rs.getInt("poll_option_id"),
+            title = rs.getString("title"),
+            episode = rs.getInt("episode"),
+            votes = rs.getInt("votes"),
+            createdAt = rs.getTimestamp("created_at").toLocalDateTime(),
+            updatedAt = rs.getTimestamp("updated_at").toLocalDateTime()
         )
     }
 }

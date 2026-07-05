@@ -22,6 +22,12 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
                     "Poll with id $contentId contentType $contentType pollOptionId $pollOptionId topicId $topicId not found"
                 )
             }
+        } || get(exchange, "/poll/by-contentid", mediaTypes) {
+            val contentId = parameters(exchange)["contentId"]!!
+            val contentType = parameters(exchange)["contentType"]!!
+            val records = gateway.findByContentId(contentId.toInt(), contentType)
+            val pollList = records.map { it.toPollInfo("poll info") }
+            mapper.writeValueAsString(pollList)
         } || post(exchange, "/poll", mediaTypes) {
             val request = mapper.readValue(body(exchange), PollInfo::class.java)
 
@@ -49,7 +55,7 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
                 votes = request.votes
             )
 
-            if (updatedCount > 0) {
+            if (updatedCount > -1) {
                 val record = gateway.findObject(
                     request.contentId, request.contentType, request.topicId, request.pollOptionId
                 )!!

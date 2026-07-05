@@ -71,9 +71,6 @@ class JdbcTemplate(val dataSource: DataSource) {
         }
     }
 
-    fun <T> findBy(sql: String, mapper: (ResultSet) -> T, id: Long) =
-        query(sql, { ps -> ps.setLong(1, id) }, mapper, arrayOf(id))
-
     fun <T> findObject(sql: String, mapper: (ResultSet) -> T, vararg params: Any): T? {
         val list = query(sql, { ps -> bindParams(ps, params) }, mapper, params)
         return when {
@@ -82,8 +79,9 @@ class JdbcTemplate(val dataSource: DataSource) {
         }
     }
 
-    fun <T> findBy(sql: String, mapper: (ResultSet) -> T, vararg params: Any) =
-        query(sql, { ps -> bindParams(ps, params) }, mapper, params)
+    fun <T> findList(sql: String, mapper: (ResultSet) -> T, vararg params: Any): List<T> {
+        return query(sql, { ps -> bindParams(ps, params) }, mapper, params)
+    }
 
     fun update(sql: String, vararg params: Any): Int =
         dataSource.connection.use { connection ->

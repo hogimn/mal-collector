@@ -109,18 +109,12 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
 
     fun findObject(id: Int): AnimeRecord? {
         val sql = "$selectSql where id = ?"
-        return jdbcTemplate.findObject(sql, { rs -> mapRow(rs) }, id)
+        return jdbcTemplate.findObject(sql, ::mapRow, id)
     }
 
     fun findByYearAndSeason(year: Int, season: String): List<AnimeRecord> {
         val sql = "$selectSql where year = ? and season = ?"
-        return jdbcTemplate.query(
-            sql,
-            { ps ->
-                ps.setInt(1, year)
-                ps.setString(2, season)
-            },
-            { rs -> mapRow(rs) })
+        return jdbcTemplate.findList(sql, ::mapRow, year, season)
     }
 
     private fun mapRow(rs: ResultSet): AnimeRecord {

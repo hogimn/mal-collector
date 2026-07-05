@@ -72,6 +72,31 @@ class PollControllerTest : TestControllerSupport() {
     }
 
     @Test
+    fun testFindByContentId() {
+        TestScenarioSupport(dataSource).loadTestScenario("jacks-test-scenario")
+
+        val response = template.get(
+            "http://localhost:8081/poll/by-contentid",
+            "application/json",
+            Pair("contentId", "4765"),
+            Pair("contentType", "anime"),
+        )
+        val actual: List<PollInfo> = mapper.readValue(response, object : TypeReference<List<PollInfo>>() {})
+        val actualFirst = actual.first()
+
+        assertEquals(4765, actualFirst.contentId)
+        assertEquals("anime", actualFirst.contentType)
+        assertEquals(101, actualFirst.topicId)
+        assertEquals(1, actualFirst.pollOptionId)
+        assertEquals("To You, in 2000 Years: The Fall of Shiganshina, Part 1", actualFirst.title)
+        assertEquals(1, actualFirst.episode)
+        assertEquals(15240, actualFirst.votes)
+        assertEquals(LocalDateTime.of(2026, 6, 28, 21, 0, 0), actualFirst.createdAt)
+        assertEquals(LocalDateTime.of(2026, 6, 28, 21, 0, 0), actualFirst.updatedAt)
+        assertEquals("poll info", actualFirst.info)
+    }
+
+    @Test
     fun testCreate() {
         val newPoll = PollInfo(
             contentId = 5555,
