@@ -10,7 +10,6 @@ import com.sun.net.httpserver.HttpExchange
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.util.concurrent.Executors
 import kotlin.test.assertEquals
 
 class GatewayControllerTest : TestControllerSupport() {
@@ -22,7 +21,6 @@ class GatewayControllerTest : TestControllerSupport() {
 
     private val server = object : BasicServer(8086) {
         override fun registerContexts() {
-            server.executor = Executors.newCachedThreadPool()
             context("/api", GatewayController(template, stubDiscoveryClient))
 
             context("/anime", object : BasicController() {

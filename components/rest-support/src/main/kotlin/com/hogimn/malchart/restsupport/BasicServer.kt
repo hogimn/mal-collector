@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpServer
 import com.sun.net.httpserver.HttpsServer
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.util.concurrent.Executors
 
 abstract class BasicServer(port: Int) {
     protected val server: HttpServer = HttpServer.create(InetSocketAddress(port), 0)
@@ -13,6 +14,7 @@ abstract class BasicServer(port: Int) {
 
     open fun start() {
         registerContexts()
+        server.executor = Executors.newCachedThreadPool()
         server.start()
     }
 
