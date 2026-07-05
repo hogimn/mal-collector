@@ -1,1 +1,0 @@
-insert into allocations (id, project_id, user_id, first_day, last_day) values (754, 55432, 4765, '2015-05-17', '2015-05-18'), (755, 55432, 4766, '2015-05-17', '2015-05-18');

@@ -10,10 +10,7 @@ dependencies {
 
 test {
     dependsOn(
-        ":applications:discovery-server:jar",
-        ":applications:allocations-server:jar",
-        ":applications:backlog-server:jar",
-        ":applications:registration-server:jar",
-        ":applications:timesheets-server:jar"
+        ":applications:anime-server:jar",
+        ":applications:poll-server:jar",
     )
 }

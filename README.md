@@ -51,24 +51,28 @@ v10             Circuit Breaker
     sudo mysql -v -uroot --execute="drop user 'uservices'@'localhost'"
     sudo mysql -v -uroot --execute="create user 'uservices'@'localhost' identified by 'uservices';"
 
-    for database_name in 'allocations' 'backlog' 'registration' 'timesheets' 'anime' 'poll'; do
+    for database_name in  'anime' 'poll'; do
       sudo mysql -v -uroot --execute="drop database if exists ${database_name}_test"
       sudo mysql -v -uroot --execute="create database ${database_name}_test"
       sudo mysql -v -uroot --execute="grant all on  ${database_name}_test.* to 'uservices'@'localhost';"
       sudo mysql -v -uroot --execute="grant select on performance_schema.* to 'uservices'@'localhost';"
+   
+      sudo mysql -v -uroot --execute="drop database if exists ${database_name}"
+      sudo mysql -v -uroot --execute="create database ${database_name}"
+      sudo mysql -v -uroot --execute="grant all on  ${database_name}.* to 'uservices'@'localhost';"
+      sudo mysql -v -uroot --execute="grant select on performance_schema.* to 'uservices'@'localhost';"
     done
-    sudo mysql -v -uuservices -puservices registration_test --execute="select now();"
+   
+    sudo mysql -v -uuservices -puservices anime_test --execute="select now();"
     ```
 
 6. Schema Migrations
 
    ```bash
-   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/allocations_test" -locations=filesystem:databases/allocations-database clean migrate
-   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/backlog_test" -locations=filesystem:databases/backlog-database clean migrate
-   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/registration_test" -locations=filesystem:databases/registration-database clean migrate
-   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/timesheets_test" -locations=filesystem:databases/timesheets-database clean migrate
    flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/anime_test" -locations=filesystem:databases/anime-database clean migrate
    flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/poll_test" -locations=filesystem:databases/poll-database clean migrate
+   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/anime" -locations=filesystem:databases/anime-database clean migrate
+   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/poll" -locations=filesystem:databases/poll-database clean migrate
    ```
 
 7. Run tests
@@ -97,37 +101,21 @@ java -jar applications/discovery-server/build/libs/discovery-server.jar
 Then start each application server (backed by mysql), pointing it at the discovery server:
 
 ```bash
+PORT=8880 \
+DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
+java -jar applications/gateway-server/build/libs/gateway-server.jar
+
 PORT=8881 \
-DATABASE_URL="jdbc:mysql://localhost:3306/allocations_test?user=uservices&password=uservices" \
-DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
-java -jar applications/allocations-server/build/libs/allocations-server.jar
-
-PORT=8882 \
-DATABASE_URL="jdbc:mysql://localhost:3306/backlog_test?user=uservices&password=uservices" \
-DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
-java -jar applications/backlog-server/build/libs/backlog-server.jar
-
-PORT=8883 \
-DATABASE_URL="jdbc:mysql://localhost:3306/registration_test?user=uservices&password=uservices" \
-DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
-java -jar applications/registration-server/build/libs/registration-server.jar
-
-PORT=8884 \
-DATABASE_URL="jdbc:mysql://localhost:3306/timesheets_test?user=uservices&password=uservices" \
-DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
-java -jar applications/timesheets-server/build/libs/timesheets-server.jar
-
-PORT=8885 \
-DATABASE_URL="jdbc:mysql://localhost:3306/anime_test?user=uservices&password=uservices" \
+DATABASE_URL="jdbc:mysql://localhost:3306/anime?user=uservices&password=uservices" \
 DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/anime-server/build/libs/anime-server.jar
 
-PORT=8886 \
-DATABASE_URL="jdbc:mysql://localhost:3306/poll_test?user=uservices&password=uservices" \
+PORT=8882 \
+DATABASE_URL="jdbc:mysql://localhost:3306/poll?user=uservices&password=uservices" \
 DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/poll-server/build/libs/poll-server.jar
 
-PORT=8887 \
+PORT=8883 \
 MAL_CLIENT_ID="YOUR_MAL_CLIENT_ID" \
 DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/mal-server/build/libs/mal-server.jar

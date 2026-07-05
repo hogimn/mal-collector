@@ -1,9 +1,0 @@
-dependencies {
-    implementation(project(":components:jdbc-support"))
-    implementation(project(":components:rest-support"))
-    implementation(project(":components:test-support"))
-    implementation(project(":components:users"))
-
-    testImplementation("com.zaxxer:HikariCP:$hikari_version")
-    testImplementation("com.mysql:mysql-connector-j:$mysql_connector_version")
-}
