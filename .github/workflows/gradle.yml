@@ -38,26 +38,22 @@ jobs:
         sudo mysql -v -uroot -proot --execute="DROP USER IF EXISTS 'uservices'@'localhost';"
         sudo mysql -v -uroot -proot --execute="CREATE USER 'uservices'@'localhost' IDENTIFIED BY 'uservices';"
         
-        for database_name in 'allocations' 'backlog' 'registration' 'timesheets' 'anime' 'poll'; do
-          sudo mysql -v -uroot -proot --execute="DROP DATABASE IF EXISTS ${database_name}_test"
-          sudo mysql -v -uroot -proot --execute="CREATE DATABASE ${database_name}_test"
-          sudo mysql -v -uroot -proot --execute="GRANT ALL ON ${database_name}_test.* TO 'uservices'@'localhost';"
+        for database_name in 'anime' 'poll'; do
+          sudo mysql -v -uroot -proot --execute="DROP DATABASE IF EXISTS test_${database_name}"
+          sudo mysql -v -uroot -proot --execute="CREATE DATABASE test_${database_name}"
+          sudo mysql -v -uroot -proot --execute="GRANT ALL ON test_${database_name}.* TO 'uservices'@'localhost';"
           sudo mysql -v -uroot -proot --execute="GRANT SELECT ON performance_schema.* TO 'uservices'@'localhost';"
         done
         
-        sudo mysql -v -uuservices -puservices registration_test --execute="SELECT NOW();"
+        sudo mysql -v -uuservices -puservices test_anime --execute="SELECT NOW();"
 
     - name: Setup Flyway and Run Migrations
       run: |
         wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/10.15.0/flyway-commandline-10.15.0-linux-x64.tar.gz | tar xvz
         export PATH=$PWD/flyway-10.15.0:$PATH
         
-        flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/allocations_test" -locations=filesystem:databases/allocations-database clean migrate
-        flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/backlog_test" -locations=filesystem:databases/backlog-database clean migrate
-        flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/registration_test" -locations=filesystem:databases/registration-database clean migrate
-        flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/timesheets_test" -locations=filesystem:databases/timesheets-database clean migrate
-        flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/anime_test" -locations=filesystem:databases/anime-database clean migrate
-        flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/poll_test" -locations=filesystem:databases/poll-database clean migrate
+        flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/test_anime" -locations=filesystem:databases/anime-database clean migrate
+        flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/test_poll" -locations=filesystem:databases/poll-database clean migrate
 
     - name: Build with Gradle Wrapper
       run: |
