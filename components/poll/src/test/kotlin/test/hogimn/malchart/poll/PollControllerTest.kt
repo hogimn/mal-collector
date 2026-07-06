@@ -18,7 +18,7 @@ import kotlin.test.assertNotNull
 
 class PollControllerTest : TestControllerSupport() {
     val dataSource =
-        DataSourceConfig().createDataSource("jdbc:mysql://localhost:3306/poll_test?user=uservices&password=uservices")
+        DataSourceConfig().createDataSource("jdbc:mysql://localhost:3306/test_poll?user=uservices&password=uservices")
 
     private val server = object : BasicServer(8081) {
         override fun registerContexts() {

@@ -11,7 +11,7 @@ import kotlin.test.assertNotNull
 
 class AnimeDataGatewayTest {
     private val dataSource = DataSourceConfig().createDataSource(
-        "jdbc:mysql://localhost:3306/anime_test?user=uservices&password=uservices"
+        "jdbc:mysql://localhost:3306/test_anime?user=uservices&password=uservices"
     )
     private val template = JdbcTemplate(dataSource)
     private val gateway = AnimeDataGateway(template)

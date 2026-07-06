@@ -17,7 +17,7 @@ import kotlin.test.assertEquals
 
 class AnimeControllerTest : TestControllerSupport() {
     val dataSource =
-        DataSourceConfig().createDataSource("jdbc:mysql://localhost:3306/anime_test?user=uservices&password=uservices")
+        DataSourceConfig().createDataSource("jdbc:mysql://localhost:3306/test_anime?user=uservices&password=uservices")
 
     private val server = object : BasicServer(8081) {
         override fun registerContexts() {

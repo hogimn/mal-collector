@@ -10,7 +10,7 @@ import kotlin.test.assertNotNull
 
 class PollDataGatewayTest {
     private val dataSource = DataSourceConfig().createDataSource(
-        "jdbc:mysql://localhost:3306/poll_test?user=uservices&password=uservices"
+        "jdbc:mysql://localhost:3306/test_poll?user=uservices&password=uservices"
     )
     private val template = JdbcTemplate(dataSource)
     private val gateway = PollDataGateway(template)

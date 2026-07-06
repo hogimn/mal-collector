@@ -52,27 +52,27 @@ v10             Circuit Breaker
     sudo mysql -v -uroot --execute="create user 'uservices'@'localhost' identified by 'uservices';"
 
     for database_name in  'anime' 'poll'; do
-      sudo mysql -v -uroot --execute="drop database if exists ${database_name}_test"
-      sudo mysql -v -uroot --execute="create database ${database_name}_test"
-      sudo mysql -v -uroot --execute="grant all on  ${database_name}_test.* to 'uservices'@'localhost';"
+      sudo mysql -v -uroot --execute="drop database if exists test_${database_name}"
+      sudo mysql -v -uroot --execute="create database test_${database_name}"
+      sudo mysql -v -uroot --execute="grant all on  test_${database_name}.* to 'uservices'@'localhost';"
       sudo mysql -v -uroot --execute="grant select on performance_schema.* to 'uservices'@'localhost';"
    
-      sudo mysql -v -uroot --execute="drop database if exists ${database_name}"
-      sudo mysql -v -uroot --execute="create database ${database_name}"
-      sudo mysql -v -uroot --execute="grant all on  ${database_name}.* to 'uservices'@'localhost';"
+      sudo mysql -v -uroot --execute="drop database if exists dev_${database_name}"
+      sudo mysql -v -uroot --execute="create database dev_${database_name}"
+      sudo mysql -v -uroot --execute="grant all on  dev_${database_name}.* to 'uservices'@'localhost';"
       sudo mysql -v -uroot --execute="grant select on performance_schema.* to 'uservices'@'localhost';"
     done
    
-    sudo mysql -v -uuservices -puservices anime_test --execute="select now();"
+    sudo mysql -v -uuservices -puservices test_anime --execute="select now();"
     ```
 
 6. Schema Migrations
 
    ```bash
-   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/anime_test" -locations=filesystem:databases/anime-database clean migrate
-   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/poll_test" -locations=filesystem:databases/poll-database clean migrate
-   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/anime" -locations=filesystem:databases/anime-database clean migrate
-   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/poll" -locations=filesystem:databases/poll-database clean migrate
+   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/test_anime" -locations=filesystem:databases/anime-database clean migrate
+   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/test_poll" -locations=filesystem:databases/poll-database clean migrate
+   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/dev_anime" -locations=filesystem:databases/anime-database clean migrate
+   flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/dev_poll" -locations=filesystem:databases/poll-database clean migrate
    ```
 
 7. Run tests
@@ -106,12 +106,12 @@ DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/gateway-server/build/libs/gateway-server.jar
 
 PORT=8881 \
-DATABASE_URL="jdbc:mysql://localhost:3306/anime?user=uservices&password=uservices" \
+DATABASE_URL="jdbc:mysql://localhost:3306/dev_anime?user=uservices&password=uservices" \
 DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/anime-server/build/libs/anime-server.jar
 
 PORT=8882 \
-DATABASE_URL="jdbc:mysql://localhost:3306/poll?user=uservices&password=uservices" \
+DATABASE_URL="jdbc:mysql://localhost:3306/dev_poll?user=uservices&password=uservices" \
 DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/poll-server/build/libs/poll-server.jar
 

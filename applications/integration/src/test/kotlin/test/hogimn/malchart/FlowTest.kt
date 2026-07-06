@@ -25,13 +25,13 @@ class FlowTest {
 
         JdbcTemplate(
             DataSourceConfig()
-                .createDataSource("jdbc:mysql://localhost:3306/anime_test?user=uservices&password=uservices")
+                .createDataSource("jdbc:mysql://localhost:3306/test_anime?user=uservices&password=uservices")
         ).apply {
             execute("delete from anime")
         }
         JdbcTemplate(
             DataSourceConfig()
-                .createDataSource("jdbc:mysql://localhost:3306/poll_test?user=uservices&password=uservices")
+                .createDataSource("jdbc:mysql://localhost:3306/test_poll?user=uservices&password=uservices")
         ).apply {
             execute("delete from poll")
         }
@@ -171,7 +171,7 @@ class FlowTest {
             .redirectError(ProcessBuilder.Redirect.INHERIT)
         builder.environment()["PORT"] = port.toString()
         builder.environment()["DATABASE_URL"] =
-            "jdbc:mysql://localhost:3306/${services}_test?user=uservices&password=uservices"
+            "jdbc:mysql://localhost:3306/test_${services}?user=uservices&password=uservices"
         builder.environment()["REDIS_HOST"] = "localhost"
         builder.environment()["REDIS_PASSWORD"] = "foobared"
         builder.environment()["DISCOVERY_SERVER_ENDPOINT"] = "http://localhost:8890"
