@@ -14,16 +14,15 @@ import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class App(port: Int) : BasicServer(port) {
+class App(port: Int, val malClientId: String) : BasicServer(port) {
     val mapper: ObjectMapper = ObjectMapper()
         .registerKotlinModule()
         .registerModule(JavaTimeModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-    val clientId: String = getenv("MAL_CLIENT_ID")
 
     override fun registerContexts() {
-        val animeClient = AnimeClient(mapper, RestTemplate(), MalProvider(clientId))
-        val animePollClient = AnimePollClient(mapper, RestTemplate(), MalProvider(clientId))
+        val animeClient = AnimeClient(mapper, RestTemplate(), MalProvider(malClientId))
+        val animePollClient = AnimePollClient(mapper, RestTemplate(), MalProvider(malClientId))
         context("/mal", MalController(animeClient, animePollClient))
         context("/", DefaultController())
     }
@@ -39,5 +38,7 @@ class App(port: Int) : BasicServer(port) {
 fun main() {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
     val port = getenv("PORT").toInt()
-    App(port).start()
+    val malClientId = getenv("MAL_CLIENT_ID")
+        ?: throw IllegalStateException("Environment variable 'MAL_CLIENT_ID' is not set.")
+    App(port, malClientId).start()
 }
