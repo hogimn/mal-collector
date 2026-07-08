@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.hogimn.malchart.anime.AnimeController
 import com.hogimn.malchart.anime.AnimeDataGateway
 import com.hogimn.malchart.anime.AnimeInfo
+import com.hogimn.malchart.anime.PollClient
 import com.hogimn.malchart.jdbcsupport.DataSourceConfig
 import com.hogimn.malchart.jdbcsupport.JdbcTemplate
 import com.hogimn.malchart.restsupport.BasicServer
+import com.hogimn.malchart.restsupport.RestTemplate
 import com.hogimn.malchart.testsupport.TestControllerSupport
 import com.hogimn.malchart.testsupport.TestScenarioSupport
 import org.junit.After
@@ -25,7 +27,8 @@ class AnimeControllerTest : TestControllerSupport() {
                 "/anime",
                 AnimeController(
                     mapper,
-                    AnimeDataGateway(JdbcTemplate(dataSource))
+                    AnimeDataGateway(JdbcTemplate(dataSource)),
+                    PollClient(mapper, RestTemplate())
                 )
             )
         }

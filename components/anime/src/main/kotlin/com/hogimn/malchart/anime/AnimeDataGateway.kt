@@ -31,6 +31,15 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
         from anime
     """.trimIndent()
 
+    private val selectActiveAnimeSql = """
+        select 
+            id, title, link, image, score, members, genre, studios, source, season, year, 
+            `rank`, popularity, scoring_count, episodes, air_status, type, start_date, end_date, 
+            english_title, japanese_title, synopsis, created_at, updated_at, large_image, rating, nsfw
+        from anime
+        where score > 0
+    """.trimIndent()
+
     private val upsertSql = """
         insert into anime (
             id, title, link, image, score, members, genre, studios, source, season, year, 
@@ -115,6 +124,10 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
     fun findByYearAndSeason(year: Int, season: String): List<AnimeRecord> {
         val sql = "$selectSql where year = ? and season = ?"
         return jdbcTemplate.findList(sql, ::mapRow, year, season)
+    }
+
+    fun findActiveAnimes(): List<AnimeRecord> {
+        return jdbcTemplate.findList(selectActiveAnimeSql, ::mapRow)
     }
 
     private fun mapRow(rs: ResultSet): AnimeRecord {

@@ -1,8 +1,8 @@
 package com.hogimn.malchart.poll
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.sun.net.httpserver.HttpExchange
 import com.hogimn.malchart.restsupport.BasicController
+import com.sun.net.httpserver.HttpExchange
 
 class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : BasicController() {
 
@@ -91,6 +91,13 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
             )
 
             mapper.writeValueAsString(record.toPollInfo("poll upserted"))
+        } || get(
+            exchange, "/poll/content-ids", mediaTypes,
+            { params -> params.containsKey("contentType") }
+        ) {
+            val contentType = parameters(exchange)["contentType"]!!
+            val contentIds = gateway.findDistinctContentIds(contentType)
+            mapper.writeValueAsString(contentIds)
         }
     }
 

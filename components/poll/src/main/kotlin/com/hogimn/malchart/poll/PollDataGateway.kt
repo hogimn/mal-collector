@@ -39,6 +39,12 @@ class PollDataGateway(val jdbcTemplate: JdbcTemplate) {
             updated_at = values(updated_at)
     """.trimIndent()
 
+    private val selectDistinctContentIdsSql = """
+        select distinct content_id 
+        from poll 
+        where content_type = ?
+    """.trimIndent()
+
     fun create(
         contentId: Int,
         contentType: String,
@@ -129,6 +135,14 @@ class PollDataGateway(val jdbcTemplate: JdbcTemplate) {
                 )
             },
             contentId, contentType, topicId, pollOptionId, title, episode, votes, now, now
+        )
+    }
+
+    fun findDistinctContentIds(contentType: String): List<Int> {
+        return jdbcTemplate.findList(
+            selectDistinctContentIdsSql,
+            { rs -> rs.getInt("content_id") },
+            contentType
         )
     }
 

@@ -1,5 +1,6 @@
 package com.hogimn.malchart.mal
 
+import AppLoggerFactory
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.hogimn.malchart.circuitbreaker.CircuitBreaker
@@ -68,9 +69,9 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
                 continue
             }
 
-            val episode = getEpisodeFromTopicTitle(forumTopic.title);
+            val episode = getEpisodeFromTopicTitle(forumTopic.title)
             if (episode == -1) {
-                logger.error("Failed to get episode from topic title: {}", forumTopic.title);
+                logger.error("Failed to get episode from topic title: {}", forumTopic.title)
                 continue
             }
 
@@ -261,7 +262,7 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
                 Pair("season", season)
             )
             val response = template.get(
-                "$endpoint/anime/by-year-and-season", "application/json", *params.toTypedArray()
+                "$endpoint/anime", "application/json", *params.toTypedArray()
             )
 
             mapper.readValue(response, object : TypeReference<List<AnimeInfo>>() {})

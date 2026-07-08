@@ -1,10 +1,11 @@
 package com.hogimn.malchart.anime
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.sun.net.httpserver.HttpExchange
 import com.hogimn.malchart.restsupport.BasicController
+import com.sun.net.httpserver.HttpExchange
 
-class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) : BasicController() {
+class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway, val pollClient: PollClient) :
+    BasicController() {
     override fun handle(exchange: HttpExchange): Boolean {
         val mediaTypes = listOf("application/json", "application/vnd.malchart.v1+json")
 
@@ -26,6 +27,16 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway) :
             val records = gateway.findByYearAndSeason(year, season)
             val animeInfoList = records.map { it.toAnimeInfo("anime info") }
             mapper.writeValueAsString(animeInfoList)
+        } || get(
+            exchange, "/anime/no-poll", mediaTypes,
+        ) {
+            val pollContentIds = pollClient.fetchPollContentIds("anime")
+            val activeRecords = gateway.findActiveAnimes()
+            val filteredInfoList = activeRecords
+                .filter { record -> !pollContentIds.contains(record.id) }
+                .map { it.toAnimeInfo("no poll anime") }
+
+            mapper.writeValueAsString(filteredInfoList)
         } || put(exchange, "/anime", mediaTypes) {
             val request = mapper.readValue(body(exchange), AnimeInfo::class.java)
 
