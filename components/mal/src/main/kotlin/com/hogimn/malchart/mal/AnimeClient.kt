@@ -1,5 +1,6 @@
 package com.hogimn.malchart.mal
 
+import AppLoggerFactory
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.hogimn.malchart.circuitbreaker.CircuitBreaker
 import com.hogimn.malchart.discovery.DiscoveryClient
@@ -10,7 +11,7 @@ import dev.katsute.mal4j.anime.property.time.Season
 import java.lang.Thread.sleep
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.Date
+import java.util.*
 
 class AnimeClient(val mapper: ObjectMapper, val template: RestTemplate, val malProvider: MalProvider) {
     private val logger = AppLoggerFactory.getLogger(javaClass)
@@ -25,6 +26,7 @@ class AnimeClient(val mapper: ObjectMapper, val template: RestTemplate, val malP
             logger.info("[${index + 1}/${animeList.size}] Collecting anime for: ${anime.title}")
 
             sleep(2000)
+
             try {
                 val startSeason = anime.startSeason
                 if (startSeason == null ||
@@ -48,7 +50,7 @@ class AnimeClient(val mapper: ObjectMapper, val template: RestTemplate, val malP
                 }, fallback())
 
             } catch (e: Exception) {
-                logger.error("Error processing anime. Skipping to the next item. Details: {}", e.message, e);
+                logger.error("Error processing anime. Skipping to the next item. Details: {}", e.message, e)
             }
         }
 
@@ -63,6 +65,7 @@ class AnimeClient(val mapper: ObjectMapper, val template: RestTemplate, val malP
         val animeList = mutableListOf<Anime>()
 
         do {
+            sleep(2000)
             val tempAnimeList = malProvider
                 .getMyAnimeList()
                 .getAnimeSeason(year, Season.asEnum(season))
@@ -75,7 +78,6 @@ class AnimeClient(val mapper: ObjectMapper, val template: RestTemplate, val malP
 
             if (tempAnimeList.size >= limit) {
                 offset += limit
-                sleep(2000)
             }
         } while (tempAnimeList.size >= limit)
 

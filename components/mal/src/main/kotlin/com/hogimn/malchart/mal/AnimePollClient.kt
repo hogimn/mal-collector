@@ -31,8 +31,6 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
 
         animeList.forEachIndexed { index, anime ->
             logger.info("[${index + 1}/${animeList.size}] Collecting poll for: ${anime.title}")
-
-            sleep(2000)
             collectPoll(anime)
         }
 
@@ -41,7 +39,10 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
 
     private fun collectPoll(anime: AnimeInfo) {
         val searchKeyword = anime.title + " Poll Episode Discussion"
+
+        sleep(2000)
         val forumTopics = fetchForumTopics(searchKeyword)
+
         for (forumTopic in forumTopics) {
             if (!isFirstWordMatching(forumTopic.title, anime.title)) {
                 logger.info(
@@ -83,15 +84,8 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
         val endpoint = DiscoveryClient(mapper, template).getUrl("poll")
         val voteZeroOptions = mutableSetOf(1, 2, 3, 4, 5)
 
-        val forumTopicDetail = try {
-            malProvider.getMyAnimeList().getForumTopicDetail(topicId)
-        } catch (e: Exception) {
-            logger.error(
-                "getForumTopicDetail Failed: Anime Id: {}, Episode: {}, Topic Id:{}, Error Message: {}",
-                animeId, episode, topicId, e.message, e
-            )
-            return
-        }
+        sleep(2000)
+        val forumTopicDetail = malProvider.getMyAnimeList().getForumTopicDetail(topicId)
 
         val poll = forumTopicDetail.poll
         val topicTitle = forumTopicDetail.title
@@ -229,6 +223,7 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
         val limit = 100
 
         while (true) {
+            sleep(2000)
             val tempForumTopics = malProvider
                 .getMyAnimeList()
                 .forumTopics
@@ -246,8 +241,6 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
             } else {
                 break
             }
-
-            sleep(2000)
         }
 
         return forumTopics
