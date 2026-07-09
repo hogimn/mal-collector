@@ -22,31 +22,31 @@ v10             Circuit Breaker
 ### Getting started
 
 1. Install redis
-   
+
     ```bash
     brew install redis
     ```
-   
+
 2. Modify `/opt/homebrew/etc/redis.conf` (`/usr/local/etc/redis.conf` on Intel Macs)
-   
+
     ```bash
     requirepass foobared
     ```
-   
+
 3. Install mysql
-   
+
     ```bash
     brew install mysql
     ```
-   
+
 4. Modify `/opt/homebrew/etc/my.cnf` (`/usr/local/etc/my.cnf` on Intel Macs)
-   
+
     ```text
     default-time-zone='+00:00'
     ```
-   
+
 5. Database setup
-   
+
     ```bash
     sudo mysql -v -uroot --execute="drop user 'uservices'@'localhost'"
     sudo mysql -v -uroot --execute="create user 'uservices'@'localhost' identified by 'uservices';"
@@ -121,15 +121,18 @@ DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/mal-server/build/libs/mal-server.jar
 ```
 
-| Variable | Used by | Description |
-| --- | --- | --- |
-| `PORT` | all servers | Port the server listens on |
-| `DATABASE_URL` | application servers | JDBC URL for the server's mysql database |
-| `REDIS_HOST` / `REDIS_PASSWORD` | discovery server | Redis connection used for the service registry |
-| `DISCOVERY_SERVER_ENDPOINT` | application servers | Base URL of the discovery server for heartbeats and lookups |
+| Variable                        | Used by             | Description                                                 |
+|---------------------------------|---------------------|-------------------------------------------------------------|
+| `PORT`                          | all servers         | Port the server listens on                                  |
+| `DATABASE_URL`                  | application servers | JDBC URL for the server's mysql database                    |
+| `REDIS_HOST` / `REDIS_PASSWORD` | discovery server    | Redis connection used for the service registry              |
+| `DISCOVERY_SERVER_ENDPOINT`     | application servers | Base URL of the discovery server for heartbeats and lookups |
 
 ### License & Attribution
-This project is licensed under the Apache License 2.0. 
-It is a derivative work based on [application-continuum](https://github.com/initialcapacity/application-continuum) by initialcapacity. 
 
-The original architecture and source files have been modified and adapted for the `malchart` project, with the original commit history fully preserved.
+This project is licensed under the Apache License 2.0.
+It is a derivative work based on [application-continuum](https://github.com/initialcapacity/application-continuum) by
+initialcapacity.
+
+The original architecture and source files have been modified and adapted for the `mal-collector` project, with the
+original commit history fully preserved.

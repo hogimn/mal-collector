@@ -1,4 +1,4 @@
-rootProject.name = "malchart"
+rootProject.name = "mal-collector"
 
 include "applications:discovery-server"
 include "applications:integration"

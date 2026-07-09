@@ -10,7 +10,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes "Main-Class": "com.hogimn.malchart.gateway.AppKt"
+        attributes "Main-Class": "com.hogimn.malcollector.gateway.AppKt"
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from {
