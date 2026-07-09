@@ -59,9 +59,20 @@ class FlowTest {
 
     @After
     fun tearDown() {
-        discovery.destroy()
-        anime.destroy()
-        poll.destroy()
+        if (::discovery.isInitialized) {
+            discovery.destroyForcibly()
+            discovery.waitFor()
+        }
+        if (::anime.isInitialized) {
+            anime.destroyForcibly()
+            anime.waitFor()
+        }
+        if (::poll.isInitialized) {
+            poll.destroyForcibly()
+            poll.waitFor()
+        }
+
+        Thread.sleep(500)
     }
 
     @Test
@@ -148,6 +159,80 @@ class FlowTest {
         )
         assert(response.contains("Which character is the best?"))
         assert(response.contains("poll info"))
+    }
+
+    @Test
+    fun testAnimeNoPollFlow() {
+        listOf(8890, 8891, 8892).forEach { waitUntilReady("http://localhost:$it") }
+
+        val animeServer = "http://localhost:8891"
+        val pollServer = "http://localhost:8892"
+        var response: String?
+
+        val animeIdWithPoll = "10001"
+        val animeWithPollJson = createAnimeJson(animeIdWithPoll, "Anime With Poll", 8.5)
+        response = template.post("$animeServer/anime", "application/json", animeWithPollJson)
+        assert(response.contains("anime created"))
+
+        val animeIdNoPoll = "10002"
+        val animeNoPollJson = createAnimeJson(animeIdNoPoll, "Anime Without Poll", 7.9)
+        response = template.post("$animeServer/anime", "application/json", animeNoPollJson)
+        assert(response.contains("anime created"))
+
+        val pollJson = """
+            {
+              "contentId": $animeIdWithPoll,
+              "contentType": "anime",
+              "topicId": 901,
+              "pollOptionId": 1,
+              "title": "Favorite Character?",
+              "episode": 1,
+              "votes": 10
+            }
+        """.trimIndent()
+        response = template.post("$pollServer/poll", "application/json", pollJson)
+        assert(response.contains("poll created"))
+
+        Thread.sleep(500)
+
+        response = template.get("$animeServer/anime/no-poll", "application/json")
+
+        assert(response.contains("Anime Without Poll"))
+        assert(!response.contains("Anime With Poll"))
+        assert(response.contains("no poll anime"))
+    }
+
+    // JSON 생성을 위한 헬퍼 메서드
+    private fun createAnimeJson(id: String, title: String, score: Double): String {
+        return """
+            {
+              "id": $id,
+              "title": "$title",
+              "link": "https://example.com/anime/$id",
+              "image": "https://example.com/img/$id.jpg",
+              "score": $score,
+              "members": 50000,
+              "genre": "Fantasy",
+              "studios": "Trigger",
+              "source": "Original",
+              "season": "SUMMER",
+              "year": 2026,
+              "rank": 200,
+              "popularity": 400,
+              "scoringCount": 45000,
+              "episodes": 12,
+              "airStatus": "Currently Airing",
+              "type": "TV",
+              "startDate": "2026-07-01T00:00:00",
+              "endDate": "2026-09-23T00:00:00",
+              "englishTitle": "$title EN",
+              "japaneseTitle": "$title JP",
+              "synopsis": "E2E testing no-poll endpoint.",
+              "largeImage": "https://example.com/img/${id}_large.jpg",
+              "rating": "PG-13",
+              "nsfw": "SFW"
+            }
+        """.trimIndent()
     }
 
     /// Test Support

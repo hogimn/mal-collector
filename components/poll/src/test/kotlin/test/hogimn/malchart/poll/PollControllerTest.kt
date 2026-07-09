@@ -245,4 +245,60 @@ class PollControllerTest : TestControllerSupport() {
         assertEquals("Upsert Updated Title: The Fall of Shiganshina, Part 1", dbActual.title)
         assertEquals(20000, dbActual.votes)
     }
+
+    @Test
+    fun testFindContentIds() {
+        val gateway = PollDataGateway(JdbcTemplate(dataSource))
+        val targetType = "anime"
+
+        gateway.create(
+            contentId = 4765,
+            contentType = targetType,
+            topicId = 101,
+            pollOptionId = 1,
+            title = "Title A",
+            episode = 1,
+            votes = 100
+        )
+        gateway.create(
+            contentId = 4765,
+            contentType = targetType,
+            topicId = 101,
+            pollOptionId = 2,
+            title = "Title B",
+            episode = 1,
+            votes = 150
+        )
+        gateway.create(
+            contentId = 4766,
+            contentType = targetType,
+            topicId = 102,
+            pollOptionId = 1,
+            title = "Title C",
+            episode = 2,
+            votes = 200
+        )
+        gateway.create(
+            contentId = 9999,
+            contentType = "manga",
+            topicId = 201,
+            pollOptionId = 1,
+            title = "Manga Title",
+            episode = 1,
+            votes = 50
+        )
+
+        val response = template.get(
+            "http://localhost:8081/poll/content-ids",
+            "application/json",
+            Pair("contentType", targetType)
+        )
+
+        val actualIds: List<Int> = mapper.readValue(response, object : TypeReference<List<Int>>() {})
+
+        assertEquals(2, actualIds.size)
+        assert(actualIds.contains(4765))
+        assert(actualIds.contains(4766))
+        assert(!actualIds.contains(9999))
+    }
 }

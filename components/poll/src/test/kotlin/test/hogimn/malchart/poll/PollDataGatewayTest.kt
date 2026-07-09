@@ -221,4 +221,54 @@ class PollDataGatewayTest {
         assertEquals(2, dbRecordAfterUpsert.episode)
         assertEquals(150, dbRecordAfterUpsert.votes)
     }
+
+    @Test
+    fun testFindDistinctContentIds() {
+        val targetType = "anime"
+        val otherType = "manga"
+
+        gateway.create(
+            contentId = 101,
+            contentType = targetType,
+            topicId = 1,
+            pollOptionId = 1,
+            title = "A",
+            episode = 1,
+            votes = 10
+        )
+        gateway.create(
+            contentId = 101,
+            contentType = targetType,
+            topicId = 1,
+            pollOptionId = 2,
+            title = "B",
+            episode = 1,
+            votes = 20
+        )
+        gateway.create(
+            contentId = 102,
+            contentType = targetType,
+            topicId = 2,
+            pollOptionId = 1,
+            title = "C",
+            episode = 2,
+            votes = 30
+        )
+        gateway.create(
+            contentId = 201,
+            contentType = otherType,
+            topicId = 3,
+            pollOptionId = 1,
+            title = "D",
+            episode = 1,
+            votes = 40
+        )
+
+        val distinctIds = gateway.findDistinctContentIds(targetType)
+
+        assertEquals(2, distinctIds.size)
+        assert(distinctIds.contains(101))
+        assert(distinctIds.contains(102))
+        assert(!distinctIds.contains(201))
+    }
 }
