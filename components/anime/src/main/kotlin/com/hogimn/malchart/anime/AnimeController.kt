@@ -74,11 +74,7 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway, v
             } else {
                 throw IllegalStateException("Anime with id ${request.id} not found to update")
             }
-        } || post(
-            exchange,
-            "/anime",
-            listOf("application/json", "application/vnd.malchart.v1+json")
-        ) {
+        } || post(exchange, "/anime", mediaTypes) {
             val inputData = mapper.readValue(body(exchange), AnimeInfo::class.java)
 
             val newRecord = gateway.create(
@@ -110,11 +106,7 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway, v
             )
 
             mapper.writeValueAsString(newRecord.toAnimeInfo("anime created"))
-        } || post(
-            exchange,
-            "/anime/upsert",
-            listOf("application/json", "application/vnd.malchart.v1+json")
-        ) {
+        } || post(exchange, "/anime/upsert", mediaTypes) {
             val inputData = mapper.readValue(body(exchange), AnimeInfo::class.java)
 
             val newRecord = gateway.upsert(
