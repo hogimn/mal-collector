@@ -14,13 +14,21 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
     private val logger = AppLoggerFactory.getLogger(javaClass)
     private val circuitBreaker = CircuitBreaker()
 
-    val pollOptionMap: Map<String, Int> = mapOf(
-        "5 out of 5: Loved it!" to 5,
-        "4 out of 5: Liked it" to 4,
-        "3 out of 5: It was OK" to 3,
-        "2 out of 5: Disliked it" to 2,
-        "1 out of 5: Hated it" to 1
-    )
+    companion object {
+        private const val API_DELAY_MS = 2000L
+        private const val FORUM_PAGE_LIMIT = 100
+        private const val CONTENT_TYPE_ANIME = "anime"
+        private const val SERVICE_POLL = "poll"
+        private const val SERVICE_ANIME = "anime"
+
+        val pollOptionMap: Map<String, Int> = mapOf(
+            "5 out of 5: Loved it!" to 5,
+            "4 out of 5: Liked it" to 4,
+            "3 out of 5: It was OK" to 3,
+            "2 out of 5: Disliked it" to 2,
+            "1 out of 5: Hated it" to 1
+        )
+    }
 
     fun collectByYearAndSeason(year: Int, season: String) {
         logger.info("Start collecting anime poll $year/$season")
@@ -37,10 +45,16 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
         logger.info("End collecting anime poll $year/$season")
     }
 
+    fun collectById(id: Int) {
+        logger.info("Start collecting anime $id")
+        val anime = findAnime(id) ?: return
+        collectPoll(anime)
+    }
+
     private fun collectPoll(anime: AnimeInfo) {
         val searchKeyword = anime.title + " Poll Episode Discussion"
 
-        sleep(2000)
+        sleep(API_DELAY_MS)
         val forumTopics = fetchForumTopics(searchKeyword)
 
         for (forumTopic in forumTopics) {
@@ -81,10 +95,9 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
     }
 
     private fun upsertPoll(topicId: Long, episode: Int, animeId: Int) {
-        val endpoint = DiscoveryClient(mapper, template).getUrl("poll")
         val voteZeroOptions = mutableSetOf(1, 2, 3, 4, 5)
 
-        sleep(2000)
+        sleep(API_DELAY_MS)
         val forumTopicDetail = malProvider.getMyAnimeList().getForumTopicDetail(topicId)
 
         val poll = forumTopicDetail.poll
@@ -98,30 +111,12 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
 
         for (option in options) {
             try {
-                val votes = option.votes
-                val text = option.text
-                val pollOptionId = pollOptionMap[text]
-
+                val pollOptionId = pollOptionMap[option.text] ?: continue
                 voteZeroOptions.remove(pollOptionId)
 
-                val pollInfo = PollInfo(
-                    contentId = animeId,
-                    contentType = "anime",
-                    topicId = topicId.toInt(),
-                    pollOptionId = pollOptionId!!,
-                    title = topicTitle,
-                    episode = episode,
-                    votes = votes
-                )
-
+                val pollInfo = createPollInfo(animeId, topicId, pollOptionId, topicTitle, episode, option.votes)
                 logger.info(pollInfo.toString())
-
-                circuitBreaker.withCircuitBreaker({
-                    template.post(
-                        "$endpoint/poll/upsert", "application/json",
-                        mapper.writeValueAsString(pollInfo)
-                    )
-                }, fallback())
+                sendPollRequest(pollInfo)
 
             } catch (e: Exception) {
                 logger.error(e.message, e)
@@ -130,26 +125,88 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
 
         voteZeroOptions.forEach { pollOptionId ->
             try {
-                val pollInfo = PollInfo(
-                    contentId = animeId,
-                    contentType = "anime",
-                    topicId = topicId.toInt(),
-                    pollOptionId = pollOptionId,
-                    title = topicTitle,
-                    episode = episode,
-                    votes = 0
-                )
-
-                circuitBreaker.withCircuitBreaker({
-                    template.post(
-                        "$endpoint/poll/upsert", "application/json",
-                        mapper.writeValueAsString(pollInfo)
-                    )
-                }, fallback())
+                val pollInfo = createPollInfo(animeId, topicId, pollOptionId, topicTitle, episode, 0)
+                sendPollRequest(pollInfo)
             } catch (e: Exception) {
                 logger.error(e.message, e)
             }
         }
+    }
+
+    private fun createPollInfo(
+        animeId: Int,
+        topicId: Long,
+        pollOptionId: Int,
+        topicTitle: String?,
+        episode: Int,
+        votes: Int
+    ): PollInfo {
+        return PollInfo(
+            contentId = animeId,
+            contentType = CONTENT_TYPE_ANIME,
+            topicId = topicId.toInt(),
+            pollOptionId = pollOptionId,
+            title = topicTitle ?: "",
+            episode = episode,
+            votes = votes
+        )
+    }
+
+    private fun sendPollRequest(pollInfo: PollInfo) {
+        val endpoint = DiscoveryClient(mapper, template).getUrl(SERVICE_POLL)
+        circuitBreaker.withCircuitBreaker({
+            template.post(
+                "$endpoint/poll/upsert", "application/json",
+                mapper.writeValueAsString(pollInfo)
+            )
+        }, fallback())
+    }
+
+    private fun fetchForumTopics(keyword: String): List<ForumTopic> {
+        val forumTopics = mutableListOf<ForumTopic>()
+        var offset = 0
+
+        while (true) {
+            sleep(API_DELAY_MS)
+            val tempForumTopics = malProvider
+                .getMyAnimeList()
+                .forumTopics
+                .withQuery(keyword)
+                .withLimit(FORUM_PAGE_LIMIT)
+                .withOffset(offset)
+                .search()
+
+            forumTopics.addAll(tempForumTopics)
+            logger.info("offset: {}, limit: {}, size of list: {}", offset, FORUM_PAGE_LIMIT, forumTopics.size)
+
+            if (tempForumTopics.size >= FORUM_PAGE_LIMIT) {
+                offset += FORUM_PAGE_LIMIT
+            } else {
+                break
+            }
+        }
+
+        return forumTopics
+    }
+
+    private fun findSeasonalAnime(year: Int, season: String): List<AnimeInfo>? {
+        val params = listOf(Pair("year", year.toString()), Pair("season", season))
+        return fetchAnimeData(params, object : TypeReference<List<AnimeInfo>>() {})
+    }
+
+    private fun findAnime(id: Int): AnimeInfo? {
+        val params = listOf(Pair("id", id.toString()))
+        return fetchAnimeData(params, object : TypeReference<AnimeInfo>() {})
+    }
+
+    private fun <T> fetchAnimeData(params: List<Pair<String, String>>, typeReference: TypeReference<T>): T? {
+        val endpoint = DiscoveryClient(mapper, template).getUrl(SERVICE_ANIME)
+        return circuitBreaker.withCircuitBreaker({
+            val response = template.get(
+                "$endpoint/anime", "application/json", *params.toTypedArray()
+            )
+            mapper.readValue(response, typeReference)
+        }, fallback())
     }
 
     private fun getEpisodeFromTopicTitle(topicTitle: String): Int {
@@ -157,11 +214,7 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
 
         return try {
             val matchResult = regex.find(topicTitle)
-
-            if (matchResult != null) {
-                val episodeNumber = matchResult.groupValues[1]
-                episodeNumber.toInt()
-            } else {
+            matchResult?.groupValues?.get(1)?.toInt() ?: run {
                 println("No episode number found in: $topicTitle")
                 -1
             }
@@ -215,51 +268,6 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
         }
 
         return cleanTopic.startsWith(animeFirstWord) || cleanAnime.startsWith(topicFirstWord)
-    }
-
-    private fun fetchForumTopics(keyword: String): List<ForumTopic> {
-        val forumTopics = mutableListOf<ForumTopic>()
-        var offset = 0
-        val limit = 100
-
-        while (true) {
-            sleep(2000)
-            val tempForumTopics = malProvider
-                .getMyAnimeList()
-                .forumTopics
-                .withQuery(keyword)
-                .withLimit(limit)
-                .withOffset(offset)
-                .search()
-
-            forumTopics.addAll(tempForumTopics)
-
-            logger.info("offset: {}, limit: {}, size of list: {}", offset, limit, forumTopics.size)
-
-            if (tempForumTopics.size >= limit) {
-                offset += limit
-            } else {
-                break
-            }
-        }
-
-        return forumTopics
-    }
-
-    private fun findSeasonalAnime(year: Int, season: String): List<AnimeInfo>? {
-        val endpoint = DiscoveryClient(mapper, template).getUrl("anime")
-
-        return circuitBreaker.withCircuitBreaker({
-            val params = listOf(
-                Pair("year", year.toString()),
-                Pair("season", season)
-            )
-            val response = template.get(
-                "$endpoint/anime", "application/json", *params.toTypedArray()
-            )
-
-            mapper.readValue(response, object : TypeReference<List<AnimeInfo>>() {})
-        }, fallback())
     }
 
     private fun fallback(): () -> Nothing? = { null }
