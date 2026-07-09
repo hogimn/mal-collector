@@ -1,5 +1,6 @@
 package com.hogimn.malchart.restsupport
 
+import AppLoggerFactory
 import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
@@ -28,7 +29,7 @@ class RestTemplate {
         val uri = buildUri(endpoint, pairs)
         val request = HttpRequest.newBuilder(uri)
             .header("Accept", accept)
-            .header("Content-Type", "application/json") // 대문자 T 통일
+            .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(data))
             .build()
         return execute(request, data)

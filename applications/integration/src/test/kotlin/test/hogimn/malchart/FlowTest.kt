@@ -202,7 +202,6 @@ class FlowTest {
         assert(response.contains("no poll anime"))
     }
 
-    // JSON 생성을 위한 헬퍼 메서드
     private fun createAnimeJson(id: String, title: String, score: Double): String {
         return """
             {
