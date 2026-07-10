@@ -11,30 +11,23 @@ class MalController(
 
         return post(
             exchange,
-            "/mal/anime",
+            "/mal/anime/collection-job",
             mediaTypes,
             { params -> params.containsKey("year") && params.containsKey("season") }) {
             val year = parameters(exchange)["year"]!!.toInt()
             val season = parameters(exchange)["season"]!!
+
             animeClient.collectByYearAndSeason(year, season)
-            ""
-        } || post(
-            exchange,
-            "/mal/anime/poll",
-            mediaTypes,
-            { params -> params.containsKey("year") && params.containsKey("season") }) {
-            val year = parameters(exchange)["year"]!!.toInt()
-            val season = parameters(exchange)["season"]!!
             pollClient.collectByYearAndSeason(year, season)
             ""
         } || post(
-            exchange, "/mal/anime", mediaTypes, { params -> params.containsKey("id") }) {
+            exchange,
+            "/mal/anime/collection-job",
+            mediaTypes,
+            { params -> params.containsKey("id") }) {
             val id = parameters(exchange)["id"]!!.toInt()
+
             animeClient.collectById(id)
-            ""
-        } || post(
-            exchange, "/mal/anime/poll", mediaTypes, { params -> params.containsKey("id") }) {
-            val id = parameters(exchange)["id"]!!.toInt()
             pollClient.collectById(id)
             ""
         }
