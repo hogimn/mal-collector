@@ -128,9 +128,11 @@ java -jar applications/mal-server/build/libs/mal-server.jar
 | `REDIS_HOST` / `REDIS_PASSWORD` | discovery server    | Redis connection used for the service registry              |
 | `DISCOVERY_SERVER_ENDPOINT`     | application servers | Base URL of the discovery server for heartbeats and lookups |
 
-### License & Attribution
+## License & Attribution
 
-This project is licensed under the Apache License 2.0.
+This project is licensed under the **GNU General Public License v2.0 (GPL-2.0)** due to the usage of the
+[Mal4J](https://github.com/KatsuteDev/Mal4J) library wrapper. 
+
 It is a derivative work based on [application-continuum](https://github.com/initialcapacity/application-continuum) by
 initialcapacity.
 
