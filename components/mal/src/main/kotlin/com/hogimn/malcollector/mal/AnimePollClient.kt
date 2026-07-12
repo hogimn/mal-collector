@@ -191,12 +191,12 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
 
     private fun findSeasonalAnime(year: Int, season: String): List<AnimeInfo>? {
         val params = listOf(Pair("year", year.toString()), Pair("season", season))
-        return fetchAnimeData(params, object : com.fasterxml.jackson.core.type.TypeReference<List<AnimeInfo>>() {})
+        return fetchAnimeData(params, object : TypeReference<List<AnimeInfo>>() {})
     }
 
     private fun findAnime(id: Int): AnimeInfo? {
         val params = listOf(Pair("id", id.toString()))
-        return fetchAnimeData(params, object : com.fasterxml.jackson.core.type.TypeReference<AnimeInfo>() {})
+        return fetchAnimeData(params, object : TypeReference<AnimeInfo>() {})
     }
 
     private fun <T> fetchAnimeData(params: List<Pair<String, String>>, typeReference: TypeReference<T>): T? {
