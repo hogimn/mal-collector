@@ -6,6 +6,7 @@ import com.hogimn.malcollector.jdbcsupport.JdbcTemplate
 import com.hogimn.malcollector.poll.PollController
 import com.hogimn.malcollector.poll.PollDataGateway
 import com.hogimn.malcollector.poll.PollInfo
+import com.hogimn.malcollector.poll.PollSummaryInfo
 import com.hogimn.malcollector.restsupport.BasicServer
 import com.hogimn.malcollector.testsupport.TestControllerSupport
 import com.hogimn.malcollector.testsupport.TestScenarioSupport
@@ -300,5 +301,137 @@ class PollControllerTest : TestControllerSupport() {
         assert(actualIds.contains(4765))
         assert(actualIds.contains(4766))
         assert(!actualIds.contains(9999))
+    }
+
+    @Test
+    fun testFindSummary() {
+        val gateway = PollDataGateway(JdbcTemplate(dataSource))
+        val targetContentId = 8888
+        val targetType = "anime"
+
+        gateway.create(
+            contentId = targetContentId,
+            contentType = targetType,
+            topicId = 1,
+            pollOptionId = 1,
+            title = "Title A",
+            episode = 1,
+            votes = 200
+        )
+        gateway.create(
+            contentId = targetContentId,
+            contentType = targetType,
+            topicId = 1,
+            pollOptionId = 2,
+            title = "Title A",
+            episode = 1,
+            votes = 200
+        )
+        gateway.create(
+            contentId = targetContentId,
+            contentType = targetType,
+            topicId = 1,
+            pollOptionId = 3,
+            title = "Title A",
+            episode = 1,
+            votes = 200
+        )
+        gateway.create(
+            contentId = targetContentId,
+            contentType = targetType,
+            topicId = 1,
+            pollOptionId = 4,
+            title = "Title A",
+            episode = 1,
+            votes = 200
+        )
+        gateway.create(
+            contentId = targetContentId,
+            contentType = targetType,
+            topicId = 1,
+            pollOptionId = 5,
+            title = "Title A",
+            episode = 1,
+            votes = 450
+        )
+
+        gateway.create(
+            contentId = targetContentId,
+            contentType = targetType,
+            topicId = 2,
+            pollOptionId = 1,
+            title = "Title B",
+            episode = 2,
+            votes = 50
+        )
+        gateway.create(
+            contentId = targetContentId,
+            contentType = targetType,
+            topicId = 2,
+            pollOptionId = 2,
+            title = "Title B",
+            episode = 2,
+            votes = 150
+        )
+        gateway.create(
+            contentId = targetContentId,
+            contentType = targetType,
+            topicId = 2,
+            pollOptionId = 3,
+            title = "Title B",
+            episode = 2,
+            votes = 400
+        )
+        gateway.create(
+            contentId = targetContentId,
+            contentType = targetType,
+            topicId = 2,
+            pollOptionId = 4,
+            title = "Title B",
+            episode = 2,
+            votes = 300
+        )
+        gateway.create(
+            contentId = targetContentId,
+            contentType = targetType,
+            topicId = 2,
+            pollOptionId = 5,
+            title = "Title B",
+            episode = 2,
+            votes = 100
+        )
+
+        val response = template.get(
+            "http://localhost:8081/poll/summary",
+            "application/json",
+            Pair("contentId", targetContentId.toString()),
+            Pair("contentType", targetType)
+        )
+
+        val actual: PollSummaryInfo = mapper.readValue(response, object : TypeReference<PollSummaryInfo>() {})
+
+        assertEquals(targetContentId, actual.contentId)
+        assertEquals(targetType, actual.contentType)
+        assertEquals(2, actual.episodeDistribution.size)
+
+        val ep1 = actual.episodeDistribution[1]
+        assertNotNull(ep1)
+        assertEquals("3.40", ep1["averageScore"])
+        assertEquals(1250, ep1["votes"])
+        assertEquals(200, ep1["1"])
+        assertEquals(200, ep1["2"])
+        assertEquals(200, ep1["3"])
+        assertEquals(200, ep1["4"])
+        assertEquals(450, ep1["5"])
+
+        val ep2 = actual.episodeDistribution[2]
+        assertNotNull(ep2)
+        assertEquals("3.25", ep2["averageScore"])
+        assertEquals(1000, ep2["votes"])
+        assertEquals(50, ep2["1"])
+        assertEquals(150, ep2["2"])
+        assertEquals(400, ep2["3"])
+        assertEquals(300, ep2["4"])
+        assertEquals(100, ep2["5"])
     }
 }

@@ -98,6 +98,55 @@ class PollController(val mapper: ObjectMapper, val gateway: PollDataGateway) : B
             val contentType = parameters(exchange)["contentType"]!!
             val contentIds = gateway.findDistinctContentIds(contentType)
             mapper.writeValueAsString(contentIds)
+        } || get(
+            exchange, "/poll/summary", mediaTypes,
+            { params -> params.containsKey("contentId") && params.containsKey("contentType") }
+        ) {
+            val contentId = parameters(exchange)["contentId"]!!.toInt()
+            val contentType = parameters(exchange)["contentType"]!!
+
+            val records = gateway.findByContentId(contentId, contentType)
+
+            if (records.isNotEmpty()) {
+                val groupedByEpisode = records.groupBy { it.episode }
+
+                val distribution = groupedByEpisode.mapValues { (_, episodeRecords) ->
+                    var totalScoreSum = 0.0
+                    var totalVotes = 0
+                    val scoreCounts = mutableMapOf<String, Int>()
+
+                    for (record in episodeRecords) {
+                        val scoreKey = record.pollOptionId.toString()
+
+                        scoreCounts[scoreKey] = record.votes
+                        totalVotes += record.votes
+                        totalScoreSum += (record.pollOptionId * record.votes)
+                    }
+
+                    val averageScore = if (totalVotes > 0) {
+                        String.format("%.2f", totalScoreSum / totalVotes)
+                    } else {
+                        "0.0"
+                    }
+
+                    val episodeMap = mutableMapOf<String, Any>()
+                    episodeMap["averageScore"] = averageScore
+                    episodeMap["votes"] = totalVotes
+                    episodeMap.putAll(scoreCounts)
+
+                    episodeMap
+                }.toSortedMap()
+
+                val infoResult = PollSummaryInfo(
+                    contentId = contentId,
+                    contentType = contentType,
+                    episodeDistribution = distribution
+                )
+
+                mapper.writeValueAsString(infoResult)
+            } else {
+                throw IllegalStateException("No poll records found for contentId $contentId, contentType $contentType")
+            }
         }
     }
 
