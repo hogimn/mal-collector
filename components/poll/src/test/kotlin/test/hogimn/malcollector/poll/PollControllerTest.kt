@@ -6,6 +6,7 @@ import com.hogimn.malcollector.jdbcsupport.JdbcTemplate
 import com.hogimn.malcollector.poll.PollController
 import com.hogimn.malcollector.poll.PollDataGateway
 import com.hogimn.malcollector.poll.PollInfo
+import com.hogimn.malcollector.poll.PollService
 import com.hogimn.malcollector.poll.PollSummaryInfo
 import com.hogimn.malcollector.restsupport.BasicServer
 import com.hogimn.malcollector.testsupport.TestControllerSupport
@@ -27,7 +28,7 @@ class PollControllerTest : TestControllerSupport() {
                 "/poll",
                 PollController(
                     mapper,
-                    PollDataGateway(JdbcTemplate(dataSource))
+                    PollService(PollDataGateway(JdbcTemplate(dataSource)))
                 )
             )
         }

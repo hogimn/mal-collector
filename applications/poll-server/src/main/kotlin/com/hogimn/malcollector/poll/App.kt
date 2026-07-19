@@ -25,7 +25,7 @@ class App(val url: String, port: Int) : BasicServer(port) {
         val dataSource = DataSourceConfig().createDataSource(url)
         val template = JdbcTemplate(dataSource)
 
-        context("/poll", PollController(mapper, PollDataGateway(template)))
+        context("/poll", PollController(mapper, PollService(PollDataGateway(template))))
         context("/", DefaultController())
     }
 
