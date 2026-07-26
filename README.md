@@ -104,21 +104,29 @@ Then start each application server (backed by mysql), pointing it at the discove
 PORT=8880 \
 DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/gateway-server/build/libs/gateway-server.jar
+```
 
+```bash
 PORT=8881 \
 DATABASE_URL="jdbc:mysql://localhost:3306/dev_anime?user=uservices&password=uservices" \
 DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/anime-server/build/libs/anime-server.jar
+```
 
+```bash
 PORT=8882 \
 DATABASE_URL="jdbc:mysql://localhost:3306/dev_poll?user=uservices&password=uservices" \
 DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/poll-server/build/libs/poll-server.jar
+```
 
+```bash
 PORT=8883 \
 MAL_CLIENT_ID="YOUR_MAL_CLIENT_ID" \
 DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/mal-server/build/libs/mal-server.jar
+```
+
 ```
 
 | Variable                        | Used by             | Description                                                 |
