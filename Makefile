@@ -6,9 +6,8 @@ SERVICES := \
   mal-server:8884:1:applications/mal-server/build/libs/mal-server.jar
 
 .PHONY: all build start stop status restart \
-        test-no-poll test-anime-by-id test-anime-by-season test-anime-create test-anime-update test-anime-upsert \
-        test-poll-summary test-poll-detail test-poll-by-content test-poll-content-ids test-poll-season-summary \
-        test-collect-ids test-collection-job-season test-collection-job-archive
+        test-no-poll test-anime-by-id test-anime-by-season \
+        test-collect-by-ids test-collection-job-season test-collection-job-archive
 
 all: build start
 
@@ -117,70 +116,10 @@ test-anime-by-season:
 	   "http://localhost:8880/api/anime?year=$(year)&season=$(season)" \
 	   | { jq --color-output 2>/dev/null || cat; }
 
-test-anime-create:
-	@echo "==> Requesting POST http://localhost:8880/api/anime ..."
-	@curl -s -X POST \
-	   -H "Content-Type: application/json" \
-	   -H "Accept: application/json" \
-	   -d '$(data)' \
-	   http://localhost:8880/api/anime \
-	   | { jq --color-output 2>/dev/null || cat; }
-
-test-anime-update:
-	@echo "==> Requesting PUT http://localhost:8880/api/anime ..."
-	@curl -s -X PUT \
-	   -H "Content-Type: application/json" \
-	   -H "Accept: application/json" \
-	   -d '$(data)' \
-	   http://localhost:8880/api/anime \
-	   | { jq --color-output 2>/dev/null || cat; }
-
-test-anime-upsert:
-	@echo "==> Requesting POST http://localhost:8880/api/anime/upsert ..."
-	@curl -s -X POST \
-	   -H "Content-Type: application/json" \
-	   -H "Accept: application/json" \
-	   -d '$(data)' \
-	   http://localhost:8880/api/anime/upsert \
-	   | { jq --color-output 2>/dev/null || cat; }
-
-# ==========================================
-# Poll API Tests
-# ==========================================
-test-poll-summary:
-	@echo "==> Requesting GET http://localhost:8880/api/poll/summary?contentId=$(contentId)&contentType=$(contentType) ..."
-	@curl -s -H "Accept: application/json" \
-	   "http://localhost:8880/api/poll/summary?contentId=$(contentId)&contentType=$(contentType)" \
-	   | { jq --color-output 2>/dev/null || cat; }
-
-test-poll-season-summary:
-	@echo "==> Requesting GET http://localhost:8880/api/poll/season-summary?contentType=$(contentType)&year=$(year)&season=$(season) ..."
-	@curl -s -H "Accept: application/json" \
-	   "http://localhost:8880/api/poll/season-summary?contentType=$(contentType)&year=$(year)&season=$(season)" \
-	   | { jq --color-output 2>/dev/null || cat; }
-
-test-poll-detail:
-	@echo "==> Requesting GET http://localhost:8880/api/poll?contentId=$(contentId)&contentType=$(contentType)&topicId=$(topicId)&pollOptionId=$(pollOptionId) ..."
-	@curl -s -H "Accept: application/json" \
-	   "http://localhost:8880/api/poll?contentId=$(contentId)&contentType=$(contentType)&topicId=$(topicId)&pollOptionId=$(pollOptionId)" \
-	   | { jq --color-output 2>/dev/null || cat; }
-
-test-poll-by-content:
-	@echo "==> Requesting 들고오기 GET http://localhost:8880/api/poll?contentId=$(contentId)&contentType=$(contentType) ..."
-	@curl -s -H "Accept: application/json" \
-	   "http://localhost:8880/api/poll?contentId=$(contentId)&contentType=$(contentType)" \
-	   | { jq --color-output 2>/dev/null || cat; }
-
-test-poll-content-ids:
-	@echo "==> Requesting GET http://localhost:8880/api/poll/content-ids?contentType=$(contentType) ..."
-	@curl -s -H "Accept: application/json" \
-	   "http://localhost:8880/api/poll/content-ids?contentType=$(contentType)" \
-	   | { jq --color-output 2>/dev/null || cat; }
-
 # ==========================================
 # MAL Collector API Tests
 # ==========================================
-test-collect-ids:
+test-collect-by-ids:
 	@echo "==> Requesting POST http://localhost:8880/api/mal/anime/collection-job/ids ..."
 	@curl -s -X POST \
 	   -H "Content-Type: application/json" \
