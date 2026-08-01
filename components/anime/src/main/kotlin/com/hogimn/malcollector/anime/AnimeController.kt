@@ -34,7 +34,7 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway, v
             val activeRecords = gateway.findActiveAnimes()
             val filteredInfoList = activeRecords
                 .filter { record -> !pollContentIds.contains(record.id) }
-                .map { it.toAnimeInfo("no poll anime") }
+                .map { it.id }
 
             mapper.writeValueAsString(filteredInfoList)
         } || put(exchange, "/anime", mediaTypes) {

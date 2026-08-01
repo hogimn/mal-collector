@@ -1,6 +1,7 @@
 package com.hogimn.malcollector.mal
 
 import AppLoggerFactory
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.hogimn.malcollector.restsupport.BasicController
 import com.sun.net.httpserver.HttpExchange
 import java.time.LocalDate
@@ -8,7 +9,9 @@ import java.time.Month
 import java.util.concurrent.Executors
 
 class MalController(
-    val animeClient: AnimeClient, val pollClient: AnimePollClient
+    val mapper: ObjectMapper,
+    val animeClient: AnimeClient,
+    val pollClient: AnimePollClient
 ) : BasicController() {
 
     private val logger = AppLoggerFactory.getLogger(javaClass)
@@ -63,6 +66,26 @@ class MalController(
             }
 
             "Grand archive collection job (from current year down to 2000) has been successfully started."
+        } || post(
+            exchange,
+            "/mal/anime/collection-job/ids",
+            mediaTypes,
+        ) {
+            val ids: List<Int> = mapper.readValue(
+                body(exchange),
+                mapper.typeFactory.constructCollectionType(List::class.java, Int::class.java)
+            )
+
+            collectionExecutor.submit {
+                try {
+                    animeClient.collectByIds(ids)
+                    pollClient.collectByIds(ids)
+                } catch (e: Exception) {
+                    logger.error("Failed to collect data for IDs: $ids", e)
+                }
+            }
+
+            "Collection job for ${ids.size} Anime IDs has been successfully scheduled in the background."
         }
     }
 

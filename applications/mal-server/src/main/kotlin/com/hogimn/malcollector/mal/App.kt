@@ -23,7 +23,7 @@ class App(port: Int, val malClientId: String) : BasicServer(port) {
     override fun registerContexts() {
         val animeClient = AnimeClient(mapper, RestTemplate(), MalProvider(malClientId))
         val animePollClient = AnimePollClient(mapper, RestTemplate(), MalProvider(malClientId))
-        context("/mal", MalController(animeClient, animePollClient))
+        context("/mal", MalController(mapper, animeClient, animePollClient))
         context("/", DefaultController())
     }
 

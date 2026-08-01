@@ -51,6 +51,28 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
         collectPoll(anime)
     }
 
+    fun collectByIds(ids: List<Int>) {
+        logger.info("Start collecting anime poll for ${ids.size} IDs")
+
+        ids.forEachIndexed { index, id ->
+            logger.info("[${index + 1}/${ids.size}] Collecting poll for anime ID: $id")
+
+            val anime = findAnime(id)
+            if (anime == null) {
+                logger.warn("Anime not found for ID: $id. Skipping poll collection.")
+                return@forEachIndexed
+            }
+
+            try {
+                collectPoll(anime)
+            } catch (e: Exception) {
+                logger.error("Failed to collect poll for anime ID $id. Details: {}", e.message, e)
+            }
+        }
+
+        logger.info("End collecting anime poll for ${ids.size} IDs")
+    }
+
     private fun collectPoll(anime: AnimeInfo) {
         val searchKeyword = anime.title + " Poll Episode Discussion"
 
