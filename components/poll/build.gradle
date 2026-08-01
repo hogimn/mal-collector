@@ -1,4 +1,6 @@
 dependencies {
+    implementation(project(":components:circuit-breaker-support"))
+    implementation(project(":components:discovery-support"))
     implementation(project(":components:jdbc-support"))
     implementation(project(":components:rest-support"))
     implementation(project(":components:test-support"))

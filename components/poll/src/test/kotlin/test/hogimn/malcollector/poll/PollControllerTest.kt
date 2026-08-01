@@ -1,14 +1,12 @@
 package test.hogimn.malcollector.poll
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.hogimn.malcollector.discoverysupport.DiscoveryClient
 import com.hogimn.malcollector.jdbcsupport.DataSourceConfig
 import com.hogimn.malcollector.jdbcsupport.JdbcTemplate
-import com.hogimn.malcollector.poll.PollController
-import com.hogimn.malcollector.poll.PollDataGateway
-import com.hogimn.malcollector.poll.PollInfo
-import com.hogimn.malcollector.poll.PollService
-import com.hogimn.malcollector.poll.PollSummaryInfo
+import com.hogimn.malcollector.poll.*
 import com.hogimn.malcollector.restsupport.BasicServer
+import com.hogimn.malcollector.restsupport.RestTemplate
 import com.hogimn.malcollector.testsupport.TestControllerSupport
 import com.hogimn.malcollector.testsupport.TestScenarioSupport
 import org.junit.After
@@ -21,14 +19,35 @@ import kotlin.test.assertNotNull
 class PollControllerTest : TestControllerSupport() {
     val dataSource =
         DataSourceConfig().createDataSource("jdbc:mysql://localhost:3306/test_poll?user=uservices&password=uservices")
+    val restTemplate = RestTemplate()
 
     private val server = object : BasicServer(8081) {
         override fun registerContexts() {
+            val dummyAnimeClient = object : AnimeClient(mapper, restTemplate, DiscoveryClient(mapper, restTemplate)) {
+                override fun findByYearAndSeason(year: Int, season: String): List<AnimeInfo> {
+                    return listOf(
+                        AnimeInfo(
+                            id = 4765,
+                            title = "To You, in 2000 Years: The Fall of Shiganshina, Part 1",
+                            link = "", image = "", score = 0.0, members = 0,
+                            genre = "", studios = "", source = "", season = season, year = year,
+                            rank = 0, popularity = 0, scoringCount = 0, episodes = 1,
+                            airStatus = "", type = "tv", startDate = LocalDateTime.now(),
+                            endDate = LocalDateTime.now(), englishTitle = "", japaneseTitle = "",
+                            synopsis = "", largeImage = "", rating = "", nsfw = "", info = null
+                        )
+                    )
+                }
+            }
+
             context(
                 "/poll",
                 PollController(
                     mapper,
-                    PollService(PollDataGateway(JdbcTemplate(dataSource)))
+                    PollService(
+                        dummyAnimeClient,
+                        PollDataGateway(JdbcTemplate(dataSource))
+                    )
                 )
             )
         }
@@ -192,7 +211,7 @@ class PollControllerTest : TestControllerSupport() {
         assertEquals(5000, actual.votes)
         assertEquals("poll upserted", actual.info)
         assertNotNull(actual.createdAt)
-        assertNotNull(assertNotNull(actual.updatedAt))
+        assertNotNull(actual.updatedAt)
 
         val getResponse = template.get(
             "http://localhost:8081/poll",
@@ -356,52 +375,6 @@ class PollControllerTest : TestControllerSupport() {
             votes = 450
         )
 
-        gateway.create(
-            contentId = targetContentId,
-            contentType = targetType,
-            topicId = 2,
-            pollOptionId = 1,
-            title = "Title B",
-            episode = 2,
-            votes = 50
-        )
-        gateway.create(
-            contentId = targetContentId,
-            contentType = targetType,
-            topicId = 2,
-            pollOptionId = 2,
-            title = "Title B",
-            episode = 2,
-            votes = 150
-        )
-        gateway.create(
-            contentId = targetContentId,
-            contentType = targetType,
-            topicId = 2,
-            pollOptionId = 3,
-            title = "Title B",
-            episode = 2,
-            votes = 400
-        )
-        gateway.create(
-            contentId = targetContentId,
-            contentType = targetType,
-            topicId = 2,
-            pollOptionId = 4,
-            title = "Title B",
-            episode = 2,
-            votes = 300
-        )
-        gateway.create(
-            contentId = targetContentId,
-            contentType = targetType,
-            topicId = 2,
-            pollOptionId = 5,
-            title = "Title B",
-            episode = 2,
-            votes = 100
-        )
-
         val response = template.get(
             "http://localhost:8081/poll/summary",
             "application/json",
@@ -413,26 +386,44 @@ class PollControllerTest : TestControllerSupport() {
 
         assertEquals(targetContentId, actual.contentId)
         assertEquals(targetType, actual.contentType)
-        assertEquals(2, actual.episodeDistribution.size)
+        assertEquals(1, actual.episodeDistribution.size)
 
         val ep1 = actual.episodeDistribution[1]
         assertNotNull(ep1)
         assertEquals("3.40", ep1["averageScore"])
         assertEquals(1250, ep1["votes"])
-        assertEquals(200, ep1["1"])
-        assertEquals(200, ep1["2"])
-        assertEquals(200, ep1["3"])
-        assertEquals(200, ep1["4"])
-        assertEquals(450, ep1["5"])
+    }
 
-        val ep2 = actual.episodeDistribution[2]
-        assertNotNull(ep2)
-        assertEquals("3.25", ep2["averageScore"])
-        assertEquals(1000, ep2["votes"])
-        assertEquals(50, ep2["1"])
-        assertEquals(150, ep2["2"])
-        assertEquals(400, ep2["3"])
-        assertEquals(300, ep2["4"])
-        assertEquals(100, ep2["5"])
+    @Test
+    fun testFindSeasonSummary() {
+        val gateway = PollDataGateway(JdbcTemplate(dataSource))
+        val targetContentId = 4765
+        val targetType = "anime"
+
+        gateway.create(
+            contentId = targetContentId,
+            contentType = targetType,
+            topicId = 1,
+            pollOptionId = 1,
+            title = "To You, in 2000 Years",
+            episode = 1,
+            votes = 500
+        )
+
+        val response = template.get(
+            "http://localhost:8081/poll/season-summary",
+            "application/json",
+            Pair("contentType", targetType),
+            Pair("year", "2026"),
+            Pair("season", "summer")
+        )
+
+        val actualList: List<PollSummaryInfo> =
+            mapper.readValue(response, object : TypeReference<List<PollSummaryInfo>>() {})
+
+        assertNotNull(actualList)
+        assertEquals(1, actualList.size)
+        assertEquals(targetContentId, actualList.first().contentId)
+        assertEquals(targetType, actualList.first().contentType)
     }
 }

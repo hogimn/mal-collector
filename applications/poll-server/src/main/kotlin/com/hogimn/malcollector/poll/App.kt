@@ -20,12 +20,23 @@ class App(val url: String, port: Int) : BasicServer(port) {
         .registerKotlinModule()
         .registerModule(JavaTimeModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    val restTemplate = RestTemplate()
+    val discoveryClient = DiscoveryClient(mapper, restTemplate)
 
     override fun registerContexts() {
         val dataSource = DataSourceConfig().createDataSource(url)
         val template = JdbcTemplate(dataSource)
 
-        context("/poll", PollController(mapper, PollService(PollDataGateway(template))))
+        context(
+            "/poll",
+            PollController(
+                mapper,
+                PollService(
+                    AnimeClient(mapper, restTemplate, discoveryClient),
+                    PollDataGateway(template)
+                )
+            )
+        )
         context("/", DefaultController())
     }
 
