@@ -75,9 +75,44 @@ class PollService(val animeClient: AnimeClient, val gateway: PollDataGateway) {
             throw IllegalStateException("No poll records found for contentId $contentId, contentType $contentType")
         }
 
+        val distribution = buildEpisodeDistribution(records)
+
+        return PollSummaryInfo(
+            contentId = contentId,
+            contentType = contentType,
+            episodeDistribution = distribution
+        )
+    }
+
+    fun getPollSummaries(contentIds: List<Int>, contentType: String): List<PollSummaryInfo> {
+        if (contentIds.isEmpty()) return emptyList()
+
+        val records = gateway.findByContentIds(contentIds, contentType)
+
+        return records.groupBy { it.contentId }
+            .map { (contentId, contentRecords) ->
+                PollSummaryInfo(
+                    contentId = contentId,
+                    contentType = contentType,
+                    episodeDistribution = buildEpisodeDistribution(contentRecords)
+                )
+            }
+    }
+
+    fun getSeasonPollSummary(contentType: String, year: Int, season: String): List<PollSummaryInfo> {
+        val animeIds = animeClient.findIdsByYearAndSeason(year, season)
+
+        if (animeIds.isEmpty()) {
+            throw IllegalStateException("No anime found for year $year, season $season")
+        }
+
+        return getPollSummaries(animeIds, contentType)
+    }
+
+    private fun buildEpisodeDistribution(records: List<PollRecord>): Map<Int, Map<String, Any>> {
         val groupedByEpisode = records.groupBy { it.episode }
 
-        val distribution = groupedByEpisode.mapValues { (_, episodeRecords) ->
+        return groupedByEpisode.mapValues { (_, episodeRecords) ->
             var totalScoreSum = 0.0
             var totalVotes = 0
             val scoreCounts = mutableMapOf<String, Int>()
@@ -102,28 +137,6 @@ class PollService(val animeClient: AnimeClient, val gateway: PollDataGateway) {
 
             episodeMap
         }.toSortedMap()
-
-        return PollSummaryInfo(
-            contentId = contentId,
-            contentType = contentType,
-            episodeDistribution = distribution
-        )
-    }
-
-    fun getSeasonPollSummary(contentType: String, year: Int, season: String): List<PollSummaryInfo> {
-        val animeIds = animeClient.findIdsByYearAndSeason(year, season)
-
-        if (animeIds.isEmpty()) {
-            throw IllegalStateException("No anime found for year $year, season $season")
-        }
-
-        return animeIds.mapNotNull { animeId ->
-            try {
-                getPollSummary(animeId, contentType)
-            } catch (_: IllegalStateException) {
-                null
-            }
-        }
     }
 
     private fun PollRecord.toPollInfo(info: String): PollInfo {

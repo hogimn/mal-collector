@@ -415,4 +415,46 @@ class PollControllerTest : TestControllerSupport() {
         assertEquals(targetContentId, actualList.first().contentId)
         assertEquals(targetType, actualList.first().contentType)
     }
+
+    @Test
+    fun testFindSummaries() {
+        val gateway = PollDataGateway(JdbcTemplate(dataSource))
+        val targetType = "anime"
+        val contentId1 = 8888
+        val contentId2 = 8889
+
+        gateway.create(
+            contentId = contentId1,
+            contentType = targetType,
+            topicId = 1,
+            pollOptionId = 1,
+            title = "Title A",
+            episode = 1,
+            votes = 100
+        )
+        gateway.create(
+            contentId = contentId2,
+            contentType = targetType,
+            topicId = 2,
+            pollOptionId = 1,
+            title = "Title B",
+            episode = 1,
+            votes = 200
+        )
+
+        val response = template.get(
+            "http://localhost:8081/poll/summaries",
+            "application/json",
+            Pair("contentIds", "$contentId1,$contentId2"),
+            Pair("contentType", targetType)
+        )
+
+        val actualList: List<PollSummaryInfo> =
+            mapper.readValue(response, object : TypeReference<List<PollSummaryInfo>>() {})
+
+        assertEquals(2, actualList.size)
+        val ids = actualList.map { it.contentId }
+        assert(ids.contains(contentId1))
+        assert(ids.contains(contentId2))
+    }
 }

@@ -271,4 +271,39 @@ class PollDataGatewayTest {
         assert(distinctIds.contains(102))
         assert(!distinctIds.contains(201))
     }
+
+    @Test
+    fun testFindByContentIds() {
+        val contentType = "anime"
+        val contentId1 = 1001
+        val contentId2 = 1002
+
+        gateway.create(
+            contentId = contentId1,
+            contentType = contentType,
+            topicId = 101,
+            pollOptionId = 1,
+            title = "Title 1",
+            episode = 1,
+            votes = 100
+        )
+        gateway.create(
+            contentId = contentId2,
+            contentType = contentType,
+            topicId = 102,
+            pollOptionId = 1,
+            title = "Title 2",
+            episode = 1,
+            votes = 200
+        )
+
+        val results = gateway.findByContentIds(listOf(contentId1, contentId2), contentType)
+        assertEquals(2, results.size)
+        val foundIds = results.map { it.contentId }.distinct()
+        assert(foundIds.contains(contentId1))
+        assert(foundIds.contains(contentId2))
+
+        val emptyResults = gateway.findByContentIds(emptyList(), contentType)
+        assertEquals(0, emptyResults.size)
+    }
 }

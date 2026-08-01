@@ -46,5 +46,47 @@ open class PollClient(val mapper: ObjectMapper, val template: RestTemplate) {
         }
     }
 
+    open fun fetchEpisodeDistributions(
+        contentIds: List<Int>,
+        contentType: String
+    ): Map<Int, Map<Int, Map<String, Any>>> {
+        if (contentIds.isEmpty()) return emptyMap()
+
+        return try {
+            val endpoint = DiscoveryClient(mapper, template).getUrl("poll")
+            val idsParam = contentIds.joinToString(",")
+
+            val response = circuitBreaker.withCircuitBreaker({
+                template.get(
+                    "$endpoint/poll/summaries?contentType=$contentType&contentIds=$idsParam",
+                    "application/json"
+                )
+            }, fallback())
+
+            if (response.isNullOrBlank()) {
+                return emptyMap()
+            }
+
+            val jsonNode: JsonNode = mapper.readTree(response)
+            val resultMap = mutableMapOf<Int, Map<Int, Map<String, Any>>>()
+
+            if (jsonNode.isArray) {
+                for (node in jsonNode) {
+                    val contentId = node.get("contentId")?.asInt() ?: continue
+                    val distNode = node.get("episodeDistribution") ?: continue
+                    val distMap: Map<Int, Map<String, Any>> = mapper.convertValue(
+                        distNode,
+                        object : TypeReference<Map<Int, Map<String, Any>>>() {}
+                    )
+                    resultMap[contentId] = distMap
+                }
+            }
+
+            resultMap
+        } catch (_: Exception) {
+            emptyMap()
+        }
+    }
+
     private fun fallback(): () -> Nothing? = { null }
 }

@@ -91,6 +91,26 @@ class PollDataGateway(val jdbcTemplate: JdbcTemplate) {
         )
     }
 
+    fun findByContentIds(contentIds: List<Int>, contentType: String): List<PollRecord> {
+        if (contentIds.isEmpty()) return emptyList()
+
+        val placeholders = contentIds.joinToString(",") { "?" }
+        val sql = """
+            select content_id, content_type, topic_id, poll_option_id, title, episode, votes, created_at, updated_at
+            from poll
+            where content_type = ? and content_id in ($placeholders)
+            order by content_id, episode, poll_option_id
+        """.trimIndent()
+
+        val params: Array<Any> = arrayOf(contentType, *contentIds.toTypedArray())
+
+        return jdbcTemplate.findList(
+            sql,
+            ::mapRow,
+            *params
+        )
+    }
+
     fun update(
         contentId: Int,
         contentType: String,

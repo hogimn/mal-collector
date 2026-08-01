@@ -33,6 +33,18 @@ class AnimeControllerTest : TestControllerSupport() {
                 2 to mapOf("count" to 85, "score" to 4.2)
             )
         }
+
+        override fun fetchEpisodeDistributions(
+            contentIds: List<Int>,
+            contentType: String
+        ): Map<Int, Map<Int, Map<String, Any>>> {
+            return contentIds.associateWith {
+                mapOf(
+                    1 to mapOf("count" to 100, "score" to 4.5),
+                    2 to mapOf("count" to 85, "score" to 4.2)
+                )
+            }
+        }
     }
 
     private val server = object : BasicServer(8081) {
