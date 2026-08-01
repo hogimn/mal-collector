@@ -1,12 +1,10 @@
 package test.hogimn.malcollector.poll
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.hogimn.malcollector.discoverysupport.DiscoveryClient
 import com.hogimn.malcollector.jdbcsupport.DataSourceConfig
 import com.hogimn.malcollector.jdbcsupport.JdbcTemplate
 import com.hogimn.malcollector.poll.*
 import com.hogimn.malcollector.restsupport.BasicServer
-import com.hogimn.malcollector.restsupport.RestTemplate
 import com.hogimn.malcollector.testsupport.TestControllerSupport
 import com.hogimn.malcollector.testsupport.TestScenarioSupport
 import org.junit.After
@@ -19,22 +17,14 @@ import kotlin.test.assertNotNull
 class PollControllerTest : TestControllerSupport() {
     val dataSource =
         DataSourceConfig().createDataSource("jdbc:mysql://localhost:3306/test_poll?user=uservices&password=uservices")
-    val restTemplate = RestTemplate()
 
     private val server = object : BasicServer(8081) {
         override fun registerContexts() {
-            val dummyAnimeClient = object : AnimeClient(mapper, restTemplate, DiscoveryClient(mapper, restTemplate)) {
-                override fun findIdsByYearAndSeason(year: Int, season: String): List<Int> {
-                    return listOf(4765)
-                }
-            }
-
             context(
                 "/poll",
                 PollController(
                     mapper,
                     PollService(
-                        dummyAnimeClient,
                         PollDataGateway(JdbcTemplate(dataSource))
                     )
                 )
@@ -381,39 +371,6 @@ class PollControllerTest : TestControllerSupport() {
         assertNotNull(ep1)
         assertEquals("3.40", ep1["averageScore"])
         assertEquals(1250, ep1["votes"])
-    }
-
-    @Test
-    fun testFindSeasonSummary() {
-        val gateway = PollDataGateway(JdbcTemplate(dataSource))
-        val targetContentId = 4765
-        val targetType = "anime"
-
-        gateway.create(
-            contentId = targetContentId,
-            contentType = targetType,
-            topicId = 1,
-            pollOptionId = 1,
-            title = "To You, in 2000 Years",
-            episode = 1,
-            votes = 500
-        )
-
-        val response = template.get(
-            "http://localhost:8081/poll/season-summary",
-            "application/json",
-            Pair("contentType", targetType),
-            Pair("year", "2026"),
-            Pair("season", "summer")
-        )
-
-        val actualList: List<PollSummaryInfo> =
-            mapper.readValue(response, object : TypeReference<List<PollSummaryInfo>>() {})
-
-        assertNotNull(actualList)
-        assertEquals(1, actualList.size)
-        assertEquals(targetContentId, actualList.first().contentId)
-        assertEquals(targetType, actualList.first().contentType)
     }
 
     @Test

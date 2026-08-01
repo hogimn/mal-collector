@@ -39,16 +39,6 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway, v
             }
             mapper.writeValueAsString(animeInfoList)
         } || get(
-            exchange, "/anime-ids", mediaTypes,
-            { params -> params.containsKey("year") && params.containsKey("season") }
-        ) {
-            val year = parameters(exchange)["year"]!!.toInt()
-            val season = parameters(exchange)["season"]!!
-
-            val animeIds = gateway.findByYearAndSeason(year, season).map { it.id }
-
-            mapper.writeValueAsString(animeIds)
-        } || get(
             exchange, "/anime/no-poll", mediaTypes,
         ) {
             val pollContentIds = pollClient.fetchPollContentIds("anime")

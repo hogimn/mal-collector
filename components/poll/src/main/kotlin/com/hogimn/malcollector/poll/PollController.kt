@@ -53,18 +53,6 @@ class PollController(val mapper: ObjectMapper, val pollService: PollService) : B
             val summariesResult = pollService.getPollSummaries(contentIds, contentType)
             mapper.writeValueAsString(summariesResult)
         } || get(
-            exchange, "/poll/season-summary", mediaTypes,
-            { params ->
-                params.containsKey("contentType") && params.containsKey("year") && params.containsKey("season")
-            }
-        ) {
-            val contentType = parameters(exchange)["contentType"]!!
-            val year = parameters(exchange)["year"]!!.toInt()
-            val season = parameters(exchange)["season"]!!
-
-            val seasonSummaryResult = pollService.getSeasonPollSummary(contentType, year, season)
-            mapper.writeValueAsString(seasonSummaryResult)
-        } || get(
             exchange, "/poll/content-ids", mediaTypes,
             { params -> params.containsKey("contentType") }
         ) {

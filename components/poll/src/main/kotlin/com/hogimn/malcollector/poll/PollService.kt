@@ -1,6 +1,6 @@
 package com.hogimn.malcollector.poll
 
-class PollService(val animeClient: AnimeClient, val gateway: PollDataGateway) {
+class PollService(val gateway: PollDataGateway) {
 
     fun getPoll(contentId: Int, contentType: String, topicId: Int, pollOptionId: Int): PollInfo {
         val record = gateway.findObject(contentId, contentType, topicId, pollOptionId)
@@ -97,16 +97,6 @@ class PollService(val animeClient: AnimeClient, val gateway: PollDataGateway) {
                     episodeDistribution = buildEpisodeDistribution(contentRecords)
                 )
             }
-    }
-
-    fun getSeasonPollSummary(contentType: String, year: Int, season: String): List<PollSummaryInfo> {
-        val animeIds = animeClient.findIdsByYearAndSeason(year, season)
-
-        if (animeIds.isEmpty()) {
-            throw IllegalStateException("No anime found for year $year, season $season")
-        }
-
-        return getPollSummaries(animeIds, contentType)
     }
 
     private fun buildEpisodeDistribution(records: List<PollRecord>): Map<Int, Map<String, Any>> {

@@ -201,50 +201,6 @@ class FlowTest {
         assert(!response.contains(animeIdWithPoll))
     }
 
-    @Test
-    fun testSeasonPollSummaryFlow() {
-        listOf(8890, 8891, 8892).forEach { waitUntilReady("http://localhost:$it") }
-
-        val animeServer = "http://localhost:8891"
-        val pollServer = "http://localhost:8892"
-        var response: String?
-
-        val animeId = "11001"
-        val seasonAnimeJson = createAnimeJson(animeId, "Summer 2026 Anime", 8.9)
-        response = template.post("$animeServer/anime", "application/json", seasonAnimeJson)
-        assert(response.contains("anime created"))
-
-        val pollJson = """
-            {
-              "contentId": $animeId,
-              "contentType": "anime",
-              "topicId": 501,
-              "pollOptionId": 5,
-              "title": "Season Summary Test Poll",
-              "episode": 1,
-              "votes": 500
-            }
-        """.trimIndent()
-        response = template.post("$pollServer/poll", "application/json", pollJson)
-        assert(response.contains("poll created"))
-
-        Thread.sleep(500)
-
-        response = template.get(
-            "$pollServer/poll/season-summary",
-            "application/json",
-            Pair("contentType", "anime"),
-            Pair("year", "2026"),
-            Pair("season", "SUMMER")
-        )
-
-        assert(response.contains(animeId))
-        assert(response.contains("averageScore\":\"5.00"))
-        assert(response.contains("votes\":500"))
-        assert(response.contains("5\":500"))
-        assert(response.contains("episodeDistribution"))
-    }
-
     private fun createAnimeJson(id: String, title: String, score: Double): String {
         return """
             {
