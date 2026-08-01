@@ -16,10 +16,24 @@ import org.junit.Before
 import org.junit.Test
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class AnimeControllerTest : TestControllerSupport() {
     val dataSource =
         DataSourceConfig().createDataSource("jdbc:mysql://localhost:3306/test_anime?user=uservices&password=uservices")
+
+    private val testPollClient = object : PollClient(mapper, RestTemplate()) {
+        override fun fetchPollContentIds(contentType: String): Set<Int> {
+            return setOf(1001, 1002)
+        }
+
+        override fun fetchEpisodeDistribution(contentId: Int, contentType: String): Map<Int, Map<String, Any>> {
+            return mapOf(
+                1 to mapOf("count" to 100, "score" to 4.5),
+                2 to mapOf("count" to 85, "score" to 4.2)
+            )
+        }
+    }
 
     private val server = object : BasicServer(8081) {
         override fun registerContexts() {
@@ -28,7 +42,7 @@ class AnimeControllerTest : TestControllerSupport() {
                 AnimeController(
                     mapper,
                     AnimeDataGateway(JdbcTemplate(dataSource)),
-                    PollClient(mapper, RestTemplate())
+                    testPollClient
                 )
             )
         }
@@ -45,6 +59,78 @@ class AnimeControllerTest : TestControllerSupport() {
     @After
     fun tearDown() {
         server.stop()
+    }
+
+    @Test
+    fun testNoPoll() {
+        TestScenarioSupport(dataSource).loadTestScenario("jacks-test-scenario")
+
+        val pollAnime = AnimeInfo(
+            id = 1001,
+            title = "Poll Registered Anime",
+            link = "https://example.com/anime/1001",
+            image = "https://example.com/img/1001.jpg",
+            score = 8.0,
+            members = 1000,
+            genre = "Action",
+            studios = "Studio A",
+            source = "Original",
+            season = "SPRING",
+            year = 2026,
+            rank = 1,
+            popularity = 1,
+            scoringCount = 1000,
+            episodes = 12,
+            airStatus = "Currently Airing",
+            type = "TV",
+            startDate = LocalDateTime.of(2026, 7, 1, 0, 0, 0),
+            endDate = LocalDateTime.of(2026, 9, 23, 0, 0, 0),
+            englishTitle = "New Anime English",
+            japaneseTitle = "New Anime Japanese",
+            synopsis = "This is a synopsis for the newly created anime.",
+            largeImage = "https://example.com/img/9999_large.jpg",
+            rating = "PG-13",
+            nsfw = "SFW",
+        )
+
+        val noPollAnime = AnimeInfo(
+            id = 9999,
+            title = "No Poll Anime",
+            link = "https://example.com/anime/9999",
+            image = "https://example.com/img/9999.jpg",
+            score = 7.5,
+            members = 500,
+            genre = "Drama",
+            studios = "Studio B",
+            source = "Manga",
+            season = "SPRING",
+            year = 2026,
+            rank = 2,
+            popularity = 2,
+            scoringCount = 500,
+            episodes = 12,
+            airStatus = "Currently Airing",
+            type = "TV",
+            startDate = LocalDateTime.of(2026, 7, 1, 0, 0, 0),
+            endDate = LocalDateTime.of(2026, 9, 23, 0, 0, 0),
+            englishTitle = "New Anime English",
+            japaneseTitle = "New Anime Japanese",
+            synopsis = "This is a synopsis for the newly created anime.",
+            largeImage = "https://example.com/img/9999_large.jpg",
+            rating = "PG-13",
+            nsfw = "SFW",
+        )
+
+        template.post("http://localhost:8081/anime", "application/json", mapper.writeValueAsString(pollAnime))
+        template.post("http://localhost:8081/anime", "application/json", mapper.writeValueAsString(noPollAnime))
+
+        val response = template.get("http://localhost:8081/anime/no-poll", "application/json")
+        val actualNoPollIds: List<Int> = mapper.readValue(response, object : TypeReference<List<Int>>() {})
+
+        assertTrue(actualNoPollIds.contains(4765))
+        assertTrue(actualNoPollIds.contains(9999))
+        assertTrue(!actualNoPollIds.contains(1001))
+        assertTrue(!actualNoPollIds.contains(1002))
     }
 
     @Test
@@ -86,6 +172,7 @@ class AnimeControllerTest : TestControllerSupport() {
         assertEquals("R - 17+", actual.rating)
         assertEquals("SFW", actual.nsfw)
         assertEquals("anime info", actual.info)
+        assertEquals(100, actual.episodeDistribution?.get(1)?.get("count"))
     }
 
     @Test
@@ -137,6 +224,7 @@ class AnimeControllerTest : TestControllerSupport() {
         assertEquals("R - 17+", record.rating)
         assertEquals("SFW", record.nsfw)
         assertEquals("anime info", record.info)
+        assertEquals(100, record.episodeDistribution?.get(1)?.get("count"))
     }
 
     @Test
@@ -184,6 +272,7 @@ class AnimeControllerTest : TestControllerSupport() {
         assertEquals(9.55, actual.score)
         assertEquals(1, actual.rank)
         assertEquals("anime updated", actual.info)
+        assertEquals(100, actual.episodeDistribution?.get(1)?.get("count"))
     }
 
     @Test
@@ -229,6 +318,7 @@ class AnimeControllerTest : TestControllerSupport() {
         assertEquals("SUMMER", actual.season)
         assertEquals(2026, actual.year)
         assertEquals("anime created", actual.info)
+        assertEquals(100, actual.episodeDistribution?.get(1)?.get("count"))
 
         val now = LocalDateTime.now()
         assert(actual.createdAt!!.isAfter(now.minusSeconds(5)) && actual.createdAt.isBefore(now.plusSeconds(5)))
@@ -265,7 +355,7 @@ class AnimeControllerTest : TestControllerSupport() {
             startDate = LocalDateTime.of(2022, 9, 13, 0, 0, 0),
             endDate = LocalDateTime.of(2022, 9, 13, 0, 0, 0),
             englishTitle = "Cyberpunk: Edgerunners",
-            japaneseTitle = "サイバーパンク エッジランナーズ",
+            japaneseTitle = "サイバーパン크 エッジランナーズ",
             synopsis = "A street kid trying to survive in a technology and body modification-obsessed city of the future.",
             largeImage = "https://example.com/img/8888_large.jpg",
             rating = "R - 17+",
@@ -280,6 +370,7 @@ class AnimeControllerTest : TestControllerSupport() {
         assertEquals(8888, actual.id)
         assertEquals("Cyberpunk: Edgerunners", actual.title)
         assertEquals("anime upserted", actual.info)
+        assertEquals(100, actual.episodeDistribution?.get(1)?.get("count"))
 
         val idParam = Pair("id", "8888")
         val getResponse = template.get("http://localhost:8081/anime", "application/json", idParam)
@@ -331,6 +422,7 @@ class AnimeControllerTest : TestControllerSupport() {
         assertEquals(9.88, actual.score)
         assertEquals(1, actual.rank)
         assertEquals("anime upserted", actual.info)
+        assertEquals(100, actual.episodeDistribution?.get(1)?.get("count"))
 
         val idParam = Pair("id", "4765")
         val getResponse = template.get("http://localhost:8081/anime", "application/json", idParam)

@@ -28,6 +28,16 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway, v
             val animeInfoList = records.map { it.toAnimeInfo("anime info") }
             mapper.writeValueAsString(animeInfoList)
         } || get(
+            exchange, "/anime-ids", mediaTypes,
+            { params -> params.containsKey("year") && params.containsKey("season") }
+        ) {
+            val year = parameters(exchange)["year"]!!.toInt()
+            val season = parameters(exchange)["season"]!!
+
+            val animeIds = gateway.findByYearAndSeason(year, season).map { it.id }
+
+            mapper.writeValueAsString(animeIds)
+        } || get(
             exchange, "/anime/no-poll", mediaTypes,
         ) {
             val pollContentIds = pollClient.fetchPollContentIds("anime")
@@ -142,6 +152,8 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway, v
     }
 
     private fun AnimeRecord.toAnimeInfo(info: String): AnimeInfo {
+        val episodeDistribution = pollClient.fetchEpisodeDistribution(id, "anime")
+
         return AnimeInfo(
             id = this.id,
             title = this.title,
@@ -170,7 +182,8 @@ class AnimeController(val mapper: ObjectMapper, val gateway: AnimeDataGateway, v
             largeImage = this.largeImage,
             rating = this.rating,
             nsfw = this.nsfw,
-            info
+            episodeDistribution = episodeDistribution,
+            info = info
         )
     }
 }
