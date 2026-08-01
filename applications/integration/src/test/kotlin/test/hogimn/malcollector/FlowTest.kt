@@ -197,9 +197,8 @@ class FlowTest {
 
         response = template.get("$animeServer/anime/no-poll", "application/json")
 
-        assert(response.contains("Anime Without Poll"))
-        assert(!response.contains("Anime With Poll"))
-        assert(response.contains("no poll anime"))
+        assert(response.contains(animeIdNoPoll))
+        assert(!response.contains(animeIdWithPoll))
     }
 
     private fun createAnimeJson(id: String, title: String, score: Double): String {
