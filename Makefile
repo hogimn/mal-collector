@@ -2,8 +2,8 @@ SERVICES := \
   discovery-server:8888:1:applications/discovery-server/build/libs/discovery-server.jar \
   gateway-server:8880:1:applications/gateway-server/build/libs/gateway-server.jar \
   anime-server:8881:2:applications/anime-server/build/libs/anime-server.jar \
-  poll-server:8883:1:applications/poll-server/build/libs/poll-server.jar \
-  mal-server:8884:1:applications/mal-server/build/libs/mal-server.jar
+  poll-server:8883:2:applications/poll-server/build/libs/poll-server.jar \
+  mal-server:8885:1:applications/mal-server/build/libs/mal-server.jar
 
 .PHONY: all build start stop status restart \
         test-no-poll test-anime-by-id test-anime-by-season \
