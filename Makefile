@@ -5,9 +5,10 @@ SERVICES := \
   poll-server:8883:1:applications/poll-server/build/libs/poll-server.jar \
   mal-server:8884:1:applications/mal-server/build/libs/mal-server.jar
 
-MAL_CLIENT_ID ?= YOUR_MAL_CLIENT_ID
-
-.PHONY: all build start stop status restart
+.PHONY: all build start stop status restart \
+        test-no-poll test-anime-by-id test-anime-by-season test-anime-create test-anime-update test-anime-upsert \
+        test-poll-summary test-poll-detail test-poll-by-content test-poll-content-ids \
+        test-collect-ids test-collection-job-season test-collection-job-archive
 
 all: build start
 
@@ -20,54 +21,53 @@ start: stop
 	@echo "==> Starting all servers in background..."
 	@mkdir -p logs
 	@for item in $(SERVICES); do \
-		name=$$(echo $$item | cut -d: -f1); \
-		base_port=$$(echo $$item | cut -d: -f2); \
-		count=$$(echo $$item | cut -d: -f3); \
-		jar=$$(echo $$item | cut -d: -f4); \
-		for i in $$(seq 1 $$count); do \
-			port=$$(expr $$base_port + $$i - 1); \
-			inst_name="$$name-$$i"; \
-			echo "Starting $$inst_name on port $$port..."; \
-			case "$$name" in \
-				discovery-server) \
-					PORT=$$port REDIS_HOST=localhost REDIS_PASSWORD=foobared \
-					nohup java -jar $$jar > logs/$$inst_name.log 2>&1 & echo $$! >> .pids ;; \
-				gateway-server) \
-					PORT=$$port DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
-					nohup java -jar $$jar > logs/$$inst_name.log 2>&1 & echo $$! >> .pids ;; \
-				anime-server) \
-					PORT=$$port DATABASE_URL="jdbc:mysql://localhost:3306/dev_anime?user=uservices&password=uservices" DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
-					nohup java -jar $$jar > logs/$$inst_name.log 2>&1 & echo $$! >> .pids ;; \
-				poll-server) \
-					PORT=$$port DATABASE_URL="jdbc:mysql://localhost:3306/dev_poll?user=uservices&password=uservices" DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
-					nohup java -jar $$jar > logs/$$inst_name.log 2>&1 & echo $$! >> .pids ;; \
-				mal-server) \
-					PORT=$$port MAL_CLIENT_ID="$(MAL_CLIENT_ID)" DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
-					nohup java -jar $$jar > logs/$$inst_name.log 2>&1 & echo $$! >> .pids ;; \
-			esac; \
-		done; \
-		if [ "$$name" = "discovery-server" ]; then sleep 3; fi; \
+	   name=$$(echo $$item | cut -d: -f1); \
+	   base_port=$$(echo $$item | cut -d: -f2); \
+	   count=$$(echo $$item | cut -d: -f3); \
+	   jar=$$(echo $$item | cut -d: -f4); \
+	   for i in $$(seq 1 $$count); do \
+	      port=$$(expr $$base_port + $$i - 1); \
+	      inst_name="$$name-$$i"; \
+	      echo "Starting $$inst_name on port $$port..."; \
+	      case "$$name" in \
+	         discovery-server) \
+	            PORT=$$port REDIS_HOST=localhost REDIS_PASSWORD=foobared \
+	            nohup java -jar $$jar > logs/$$inst_name.log 2>&1 & echo $$! >> .pids ;; \
+	         gateway-server) \
+	            PORT=$$port DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
+	            nohup java -jar $$jar > logs/$$inst_name.log 2>&1 & echo $$! >> .pids ;; \
+	         anime-server) \
+	            PORT=$$port DATABASE_URL="jdbc:mysql://localhost:3306/dev_anime?user=uservices&password=uservices" DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
+	            nohup java -jar $$jar > logs/$$inst_name.log 2>&1 & echo $$! >> .pids ;; \
+	         poll-server) \
+	            PORT=$$port DATABASE_URL="jdbc:mysql://localhost:3306/dev_poll?user=uservices&password=uservices" DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
+	            nohup java -jar $$jar > logs/$$inst_name.log 2>&1 & echo $$! >> .pids ;; \
+	         mal-server) \
+	            PORT=$$port MAL_CLIENT_ID="$(MAL_CLIENT_ID)" DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
+	            nohup java -jar $$jar > logs/$$inst_name.log 2>&1 & echo $$! >> .pids ;; \
+	      esac; \
+	   done; \
+	   if [ "$$name" = "discovery-server" ]; then sleep 3; fi; \
 	done
 	@echo "==> All servers started! Logs are saved in ./logs/"
-	@echo ""
 
 stop:
 	@echo ""
 	@echo "==> Stopping all servers..."
 	@if [ -f .pids ]; then \
-		while read pid; do \
-			kill -9 $$pid 2>/dev/null || true; \
-		done < .pids; \
-		rm -f .pids; \
+	   while read pid; do \
+	      kill -9 $$pid 2>/dev/null || true; \
+	   done < .pids; \
+	   rm -f .pids; \
 	fi
 	@PORTS=""; \
 	for item in $(SERVICES); do \
-		base_port=$$(echo $$item | cut -d: -f2); \
-		count=$$(echo $$item | cut -d: -f3); \
-		for i in $$(seq 1 $$count); do \
-			port=$$(expr $$base_port + $$i - 1); \
-			PORTS="$$PORTS $$port/tcp"; \
-		done; \
+	   base_port=$$(echo $$item | cut -d: -f2); \
+	   count=$$(echo $$item | cut -d: -f3); \
+	   for i in $$(seq 1 $$count); do \
+	      port=$$(expr $$base_port + $$i - 1); \
+	      PORTS="$$PORTS $$port/tcp"; \
+	   done; \
 	done; \
 	fuser -k $$PORTS 2>/dev/null || true
 	@echo "==> All servers stopped."
@@ -82,17 +82,117 @@ status:
 	@printf "%-22s | %-6s | %s\n" "INSTANCE" "PORT" "PID (fuser)"
 	@echo "------------------------------------------"
 	@for item in $(SERVICES); do \
-		name=$$(echo $$item | cut -d: -f1); \
-		base_port=$$(echo $$item | cut -d: -f2); \
-		count=$$(echo $$item | cut -d: -f3); \
-		for i in $$(seq 1 $$count); do \
-			port=$$(expr $$base_port + $$i - 1); \
-			inst_name="$$name-$$i"; \
-			pid=$$(fuser $$port/tcp 2>/dev/null || echo 'OFF'); \
-			printf "%-22s | %-6s | %s\n" "$$inst_name" "$$port" "$$pid"; \
-		done; \
+	   name=$$(echo $$item | cut -d: -f1); \
+	   base_port=$$(echo $$item | cut -d: -f2); \
+	   count=$$(echo $$item | cut -d: -f3); \
+	   for i in $$(seq 1 $$count); do \
+	      port=$$(expr $$base_port + $$i - 1); \
+	      inst_name="$$name-$$i"; \
+	      pid=$$(fuser $$port/tcp 2>/dev/null || echo 'OFF'); \
+	      printf "%-22s | %-6s | %s\n" "$$inst_name" "$$port" "$$pid"; \
+	   done; \
 	done
 	@echo "------------------------------------------"
 	@echo ""
 
 restart: stop start
+
+# ==========================================
+# Anime API Tests
+# ==========================================
+test-no-poll:
+	@echo "==> Requesting GET http://localhost:8880/api/anime/no-poll (Accept: application/json) ..."
+	@curl -s -H "Accept: application/json" http://localhost:8880/api/anime/no-poll \
+	   | { jq --color-output 2>/dev/null || cat; }
+
+test-anime-by-id:
+	@echo "==> Requesting GET http://localhost:8880/api/anime?id=$(id) ..."
+	@curl -s -H "Accept: application/json" \
+	   "http://localhost:8880/api/anime?id=$(id)" \
+	   | { jq --color-output 2>/dev/null || cat; }
+
+test-anime-by-season:
+	@echo "==> Requesting GET http://localhost:8880/api/anime?year=$(year)&season=$(season) ..."
+	@curl -s -H "Accept: application/json" \
+	   "http://localhost:8880/api/anime?year=$(year)&season=$(season)" \
+	   | { jq --color-output 2>/dev/null || cat; }
+
+test-anime-create:
+	@echo "==> Requesting POST http://localhost:8880/api/anime ..."
+	@curl -s -X POST \
+	   -H "Content-Type: application/json" \
+	   -H "Accept: application/json" \
+	   -d '$(data)' \
+	   http://localhost:8880/api/anime \
+	   | { jq --color-output 2>/dev/null || cat; }
+
+test-anime-update:
+	@echo "==> Requesting PUT http://localhost:8880/api/anime ..."
+	@curl -s -X PUT \
+	   -H "Content-Type: application/json" \
+	   -H "Accept: application/json" \
+	   -d '$(data)' \
+	   http://localhost:8880/api/anime \
+	   | { jq --color-output 2>/dev/null || cat; }
+
+test-anime-upsert:
+	@echo "==> Requesting POST http://localhost:8880/api/anime/upsert ..."
+	@curl -s -X POST \
+	   -H "Content-Type: application/json" \
+	   -H "Accept: application/json" \
+	   -d '$(data)' \
+	   http://localhost:8880/api/anime/upsert \
+	   | { jq --color-output 2>/dev/null || cat; }
+
+# ==========================================
+# Poll API Tests
+# ==========================================
+test-poll-summary:
+	@echo "==> Requesting GET http://localhost:8880/api/poll/summary?contentId=$(contentId)&contentType=$(contentType) ..."
+	@curl -s -H "Accept: application/json" \
+	   "http://localhost:8880/api/poll/summary?contentId=$(contentId)&contentType=$(contentType)" \
+	   | { jq --color-output 2>/dev/null || cat; }
+
+test-poll-detail:
+	@echo "==> Requesting GET http://localhost:8880/api/poll?contentId=$(contentId)&contentType=$(contentType)&topicId=$(topicId)&pollOptionId=$(pollOptionId) ..."
+	@curl -s -H "Accept: application/json" \
+	   "http://localhost:8880/api/poll?contentId=$(contentId)&contentType=$(contentType)&topicId=$(topicId)&pollOptionId=$(pollOptionId)" \
+	   | { jq --color-output 2>/dev/null || cat; }
+
+test-poll-by-content:
+	@echo "==> Requesting GET http://localhost:8880/api/poll?contentId=$(contentId)&contentType=$(contentType) ..."
+	@curl -s -H "Accept: application/json" \
+	   "http://localhost:8880/api/poll?contentId=$(contentId)&contentType=$(contentType)" \
+	   | { jq --color-output 2>/dev/null || cat; }
+
+test-poll-content-ids:
+	@echo "==> Requesting GET http://localhost:8880/api/poll/content-ids?contentType=$(contentType) ..."
+	@curl -s -H "Accept: application/json" \
+	   "http://localhost:8880/api/poll/content-ids?contentType=$(contentType)" \
+	   | { jq --color-output 2>/dev/null || cat; }
+
+# ==========================================
+# MAL Collector API Tests
+# ==========================================
+test-collect-ids:
+	@echo "==> Requesting POST http://localhost:8880/api/mal/anime/collection-job/ids ..."
+	@curl -s -X POST \
+	   -H "Content-Type: application/json" \
+	   -H "Accept: application/json" \
+	   -d '[$(ids)]' \
+	   http://localhost:8880/api/mal/anime/collection-job/ids \
+	   | { jq --color-output 2>/dev/null || cat; }
+
+test-collection-job-season:
+	@echo "==> Requesting POST http://localhost:8880/api/mal/anime/collection-job?year=$(year)&season=$(season) ..."
+	@curl -s -X POST \
+	   -H "Accept: application/json" \
+	   "http://localhost:8880/api/mal/anime/collection-job?year=$(year)&season=$(season)" \
+	   | { jq --color-output 2>/dev/null || cat; }
+
+test-collection-job-archive:
+	@echo "==> Requesting POST http://localhost:8880/api/mal/anime/collection-job/archive ..."
+	@curl -s -X POST \
+	   -H "Accept: application/json" \
+	   "http://localhost:8880/api/mal/anime/collection-job/archive" \
+	   | { jq --color-output 2>/dev/null || cat; }
