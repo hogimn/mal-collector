@@ -16,15 +16,15 @@ open class AnimeClient(
         private const val SERVICE_NAME = "anime"
     }
 
-    open fun findByYearAndSeason(year: Int, season: String): List<AnimeInfo> {
+    open fun findIdsByYearAndSeason(year: Int, season: String): List<Int> {
         val endpoint = discoveryClient.getUrl(SERVICE_NAME)
 
         return circuitBreaker.withCircuitBreaker({
-            val response = template.get("$endpoint/anime?year=$year&season=$season", "application/json")
+            val response = template.get("$endpoint/anime-ids?year=$year&season=$season", "application/json")
             mapper.readValue(
                 response,
-                mapper.typeFactory.constructCollectionType(List::class.java, AnimeInfo::class.java)
-            ) as List<AnimeInfo>
+                mapper.typeFactory.constructCollectionType(List::class.java, Int::class.javaObjectType)
+            ) as List<Int>
         }, { emptyList() })
     }
 }

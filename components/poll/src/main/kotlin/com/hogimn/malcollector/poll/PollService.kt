@@ -111,15 +111,15 @@ class PollService(val animeClient: AnimeClient, val gateway: PollDataGateway) {
     }
 
     fun getSeasonPollSummary(contentType: String, year: Int, season: String): List<PollSummaryInfo> {
-        val animeList = animeClient.findByYearAndSeason(year, season)
+        val animeIds = animeClient.findIdsByYearAndSeason(year, season)
 
-        if (animeList.isEmpty()) {
+        if (animeIds.isEmpty()) {
             throw IllegalStateException("No anime found for year $year, season $season")
         }
 
-        return animeList.mapNotNull { anime ->
+        return animeIds.mapNotNull { animeId ->
             try {
-                getPollSummary(anime.id, contentType)
+                getPollSummary(animeId, contentType)
             } catch (_: IllegalStateException) {
                 null
             }

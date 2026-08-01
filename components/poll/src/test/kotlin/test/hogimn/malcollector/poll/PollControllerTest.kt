@@ -24,19 +24,8 @@ class PollControllerTest : TestControllerSupport() {
     private val server = object : BasicServer(8081) {
         override fun registerContexts() {
             val dummyAnimeClient = object : AnimeClient(mapper, restTemplate, DiscoveryClient(mapper, restTemplate)) {
-                override fun findByYearAndSeason(year: Int, season: String): List<AnimeInfo> {
-                    return listOf(
-                        AnimeInfo(
-                            id = 4765,
-                            title = "To You, in 2000 Years: The Fall of Shiganshina, Part 1",
-                            link = "", image = "", score = 0.0, members = 0,
-                            genre = "", studios = "", source = "", season = season, year = year,
-                            rank = 0, popularity = 0, scoringCount = 0, episodes = 1,
-                            airStatus = "", type = "tv", startDate = LocalDateTime.now(),
-                            endDate = LocalDateTime.now(), englishTitle = "", japaneseTitle = "",
-                            synopsis = "", largeImage = "", rating = "", nsfw = "", info = null
-                        )
-                    )
+                override fun findIdsByYearAndSeason(year: Int, season: String): List<Int> {
+                    return listOf(4765)
                 }
             }
 
