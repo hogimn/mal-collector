@@ -127,8 +127,6 @@ DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
 java -jar applications/mal-server/build/libs/mal-server.jar
 ```
 
-```
-
 | Variable                        | Used by             | Description                                                 |
 |---------------------------------|---------------------|-------------------------------------------------------------|
 | `PORT`                          | all servers         | Port the server listens on                                  |
