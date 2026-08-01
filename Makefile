@@ -14,7 +14,7 @@ all: build start
 
 build:
 	@echo "==> Building runnable JARs..."
-	./gradlew build
+	./gradlew clean build --parallel --configure-on-demand
 
 start: stop
 	@echo ""
