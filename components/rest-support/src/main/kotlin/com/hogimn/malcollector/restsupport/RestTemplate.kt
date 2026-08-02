@@ -60,15 +60,19 @@ class RestTemplate {
     }
 
     private fun execute(request: HttpRequest, body: String? = null): String {
-        if (body.isNullOrEmpty()) {
-            logger.info("[S] Sending Request -> [${request.method()}] ${request.uri()} (No Body)")
-        } else {
-            logger.info("[S] Sending Request -> [${request.method()}] ${request.uri()}, Body: $body")
+        if (!request.uri().toString().contains("/discovery")) {
+            if (body.isNullOrEmpty()) {
+                logger.info("[S] Sending Request -> [${request.method()}] ${request.uri()} (No Body)")
+            } else {
+                logger.info("[S] Sending Request -> [${request.method()}] ${request.uri()}, Body: $body")
+            }
         }
 
         val response = client.send(request, HttpResponse.BodyHandlers.ofString())
 
-        logger.info("[R] Received Response - Status: ${response.statusCode()}, Body: ${response.body()}")
+        if (!request.uri().toString().contains("/discovery")) {
+            logger.info("[R] Received Response - Status: ${response.statusCode()}, Body: ${response.body()}")
+        }
 
         if (response.statusCode() !in 200..299) {
             throw HttpServiceException(response.statusCode(), response.body())
