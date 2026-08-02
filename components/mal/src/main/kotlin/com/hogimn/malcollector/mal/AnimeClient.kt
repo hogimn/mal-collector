@@ -50,17 +50,7 @@ class AnimeClient(
                     return@forEachIndexed
                 }
 
-                if (anime.type.field() != "tv") {
-                    logger.info("Skipping anime '{}': Type {} (expected: tv)", anime.title, anime.type.field())
-                    return@forEachIndexed
-                }
-
-                if (anime.meanRating.toInt() == 0) {
-                    logger.info(
-                        "Skipping anime '{}': Mean rating {} (expected: > 0)",
-                        anime.title,
-                        anime.meanRating.toInt()
-                    )
+                if (!isValidAnime(anime)) {
                     return@forEachIndexed
                 }
 
@@ -77,17 +67,49 @@ class AnimeClient(
     fun collectById(id: Int) {
         val anime = malProvider.getMyAnimeList().getAnime(id.toLong())
 
-        if (anime.type.field() != "tv") {
-            logger.info("Skipping anime '{}': Type {} (expected: tv)", anime.title, anime.type.field())
-            return
-        }
-
-        if (anime.meanRating.toInt() == 0) {
-            logger.info("Skipping anime '{}': Mean rating {} (expected: > 0)", anime.title, anime.meanRating.toInt())
+        if (!isValidAnime(anime)) {
             return
         }
 
         upsertAnime(anime)
+    }
+
+    fun collectByIds(ids: List<Int>) {
+        logger.info("Start collecting anime for ${ids.size} IDs")
+
+        ids.forEachIndexed { index, id ->
+            logger.info("[${index + 1}/${ids.size}] Collecting anime for ID: $id")
+
+            sleep(API_DELAY_MS)
+
+            try {
+                val anime = malProvider.getMyAnimeList().getAnime(id.toLong())
+
+                if (!isValidAnime(anime)) {
+                    return@forEachIndexed
+                }
+
+                upsertAnime(anime)
+            } catch (e: Exception) {
+                logger.error("Failed to collect anime for ID $id. Details: {}", e.message, e)
+            }
+        }
+
+        logger.info("End collecting anime for ${ids.size} IDs")
+    }
+
+    private fun isValidAnime(anime: Anime): Boolean {
+        if (anime.type.field() != "tv") {
+            logger.info("Skipping anime '{}': Type {} (expected: tv)", anime.title, anime.type.field())
+            return false
+        }
+
+        if (anime.meanRating.toInt() == 0) {
+            logger.info("Skipping anime '{}': Mean rating {} (expected: > 0)", anime.title, anime.meanRating.toInt())
+            return false
+        }
+
+        return true
     }
 
     private fun upsertAnime(anime: Anime) {
@@ -127,31 +149,6 @@ class AnimeClient(
         } while (tempAnimeList.size >= PAGE_LIMIT)
 
         return animeList
-    }
-
-    fun collectByIds(ids: List<Int>) {
-        logger.info("Start collecting anime for ${ids.size} IDs")
-
-        ids.forEachIndexed { index, id ->
-            logger.info("[${index + 1}/${ids.size}] Collecting anime for ID: $id")
-
-            sleep(API_DELAY_MS)
-
-            try {
-                val anime = malProvider.getMyAnimeList().getAnime(id.toLong())
-
-                if (anime.type.field() != "tv") {
-                    logger.info("Skipping anime '{}': Type {} (expected: tv)", anime.title, anime.type.field())
-                    return@forEachIndexed
-                }
-
-                upsertAnime(anime)
-            } catch (e: Exception) {
-                logger.error("Failed to collect anime for ID $id. Details: {}", e.message, e)
-            }
-        }
-
-        logger.info("End collecting anime for ${ids.size} IDs")
     }
 }
 
