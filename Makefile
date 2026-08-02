@@ -138,14 +138,27 @@ test-collect-by-ids:
 	   http://localhost:8880/api/mal/anime/collection-job/ids \
 	   | { jq 2>/dev/null || cat; }
 
-test-collection-job-season:
+test-collect-by-season:
 	@echo "==> Requesting POST http://localhost:8880/api/mal/anime/collection-job?year=$(year)&season=$(season) ..."
 	@curl -s -X POST \
 	   -H "Accept: application/json" \
 	   "http://localhost:8880/api/mal/anime/collection-job?year=$(year)&season=$(season)" \
 	   | { jq 2>/dev/null || cat; }
 
-test-collection-job-archive:
+test-collect-current-season:
+	@YEAR=$$(date +%Y); \
+	MONTH=$$(date +%m); \
+	if [ $$MONTH -ge 1 ] && [ $$MONTH -le 3 ]; then SEASON="winter"; \
+	elif [ $$MONTH -ge 4 ] && [ $$MONTH -le 6 ]; then SEASON="spring"; \
+	elif [ $$MONTH -ge 7 ] && [ $$MONTH -le 9 ]; then SEASON="summer"; \
+	else SEASON="fall"; fi; \
+	echo "==> Requesting POST http://localhost:8880/api/mal/anime/collection-job?year=$$YEAR&season=$$SEASON ..."; \
+	curl -s -X POST \
+	   -H "Accept: application/json" \
+	   "http://localhost:8880/api/mal/anime/collection-job?year=$$YEAR&season=$$SEASON" \
+	   | { jq 2>/dev/null || cat; }
+
+test-collect-archive:
 	@echo "==> Requesting POST http://localhost:8880/api/mal/anime/collection-job/archive ..."
 	@curl -s -X POST \
 	   -H "Accept: application/json" \
