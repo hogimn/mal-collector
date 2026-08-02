@@ -19,33 +19,50 @@ v9              Service Discovery
 v10             Circuit Breaker
 ```
 
-### Getting started
+## Getting started
 
-1. Install redis
-
-    ```bash
-    brew install redis
-    ```
-
-2. Modify `/opt/homebrew/etc/redis.conf` (`/usr/local/etc/redis.conf` on Intel Macs)
+1. Install Redis
 
     ```bash
-    requirepass foobared
+    sudo apt update
+    sudo apt install redis-server -y
+    sudo systemctl enable redis-server
+    sudo systemctl start redis-server
     ```
 
-3. Install mysql
+2. Modify `/etc/redis/redis.conf`
 
     ```bash
-    brew install mysql
+    sudo vim /etc/redis/redis.conf
     ```
 
-4. Modify `/opt/homebrew/etc/my.cnf` (`/usr/local/etc/my.cnf` on Intel Macs)
+    - Uncomment `requirepass foobared` and set your password
+
+    ```
+      sudo systemctl restart redis-server
+    ```
+
+3. Install MySQL
+
+    ```bash
+    sudo apt update
+    sudo apt install mysql-server -y
+    sudo systemctl enable mysql
+    sudo systemctl start mysql
+    ```
+
+4. Modify `/etc/mysql/mysql.conf.d/mysqld.cnf` (or create a custom config file)
 
     ```text
     default-time-zone='+00:00'
     ```
+    - Restart MySQL to apply changes:
 
-5. Database setup
+    ```bash
+    sudo systemctl restart mysql
+    ```
+
+5. Database Setup
 
     ```bash
     sudo mysql -v -uroot --execute="drop user 'uservices'@'localhost'"
@@ -56,13 +73,13 @@ v10             Circuit Breaker
       sudo mysql -v -uroot --execute="create database test_${database_name}"
       sudo mysql -v -uroot --execute="grant all on  test_${database_name}.* to 'uservices'@'localhost';"
       sudo mysql -v -uroot --execute="grant select on performance_schema.* to 'uservices'@'localhost';"
-   
+
       sudo mysql -v -uroot --execute="drop database if exists dev_${database_name}"
       sudo mysql -v -uroot --execute="create database dev_${database_name}"
       sudo mysql -v -uroot --execute="grant all on  dev_${database_name}.* to 'uservices'@'localhost';"
       sudo mysql -v -uroot --execute="grant select on performance_schema.* to 'uservices'@'localhost';"
     done
-   
+
     sudo mysql -v -uuservices -puservices test_anime --execute="select now();"
     ```
 
@@ -75,69 +92,88 @@ v10             Circuit Breaker
    flyway -cleanDisabled=false -user=uservices -password=uservices -url="jdbc:mysql://localhost:3306/dev_poll" -locations=filesystem:databases/poll-database clean migrate
    ```
 
-7. Run tests
+## Running the servers & Frontend via Makefile
 
-   ```bash
-   ./gradlew build
-   ```
+This project provides a Makefile for convenient server management and testing.
 
-### Running the servers
+### Summary of Main Commands
 
-Each server is configured through environment variables. Build the runnable jars first:
+| Command                | Description                                                             |
+|:-----------------------|:------------------------------------------------------------------------|
+| `make` (or `make all`) | Build the project and run all backend servers + frontend                |
+| `make build`           | Run Gradle build and install/build the frontend (`frontend/`)           |
+| `make start`           | Run all services and frontend in the background (logs saved to `logs/`) |
+| `make stop`            | Safely terminate all running servers and port processes                 |
+| `make status`          | Check ports and PID status for all running instances                    |
+| `make restart`         | Restart all servers (`stop` followed by `start`)                        |
 
-```bash
-./gradlew build
-```
+### Registered Service Configuration
 
-Start the discovery server (backed by redis):
+| Service Name       | Port (Default) | Instance Count     | Description                                    |
+|:-------------------|:---------------|:-------------------|:-----------------------------------------------|
+| `discovery-server` | `8888`         | 1                  | Redis-based service registry                   |
+| `gateway-server`   | `8880`         | 1                  | API gateway                                    |
+| `anime-server`     | `8881`         | 2 (`8881`, `8882`) | Anime data management service                  |
+| `poll-server`      | `8883`         | 2 (`8883`, `8884`) | Poll data management service                   |
+| `mal-server`       | `8885`         | 1                  | MyAnimeList integration and collection service |
+| `frontend`         | `3000`         | 1                  | React frontend application                     |
 
-```bash
-PORT=8888 \
-REDIS_HOST=localhost \
-REDIS_PASSWORD=foobared \
-java -jar applications/discovery-server/build/libs/discovery-server.jar
-```
+## API Testing Commands
 
-Then start each application server (backed by mysql), pointing it at the discovery server:
+You can easily test API operations from your terminal using the provided Makefile.
+(jq is recommended for nicely formatted JSON output).
 
-```bash
-PORT=8880 \
-DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
-java -jar applications/gateway-server/build/libs/gateway-server.jar
-```
+### 1. Anime API Tests
 
-```bash
-PORT=8881 \
-DATABASE_URL="jdbc:mysql://localhost:3306/dev_anime?user=uservices&password=uservices" \
-DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
-java -jar applications/anime-server/build/libs/anime-server.jar
-```
+- Get anime with no poll:
+    ```bash
+    make test-no-poll
+    ```
+- Get anime by ID:
+    ```bash
+    make test-anime-by-id id=12345
+    ```
+- Get anime by year and season:
+    ```bash
+    make test-anime-by-season year=2026 season=summer
+    ```
 
-```bash
-PORT=8882 \
-DATABASE_URL="jdbc:mysql://localhost:3306/dev_poll?user=uservices&password=uservices" \
-DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
-java -jar applications/poll-server/build/libs/poll-server.jar
-```
+### 2. MAL Collector API Tests (Collection Jobs)
 
-```bash
-PORT=8883 \
-MAL_CLIENT_ID="YOUR_MAL_CLIENT_ID" \
-DISCOVERY_SERVER_ENDPOINT=http://localhost:8888 \
-java -jar applications/mal-server/build/libs/mal-server.jar
-```
+- Collect by ID list:
+    ```bash
+    make test-collect-anime-by-ids ids="1,2,3"
+    ```
+- Collect by specific season:
+    ```bash
+    make test-collect-anime-by-season year=2026 season=spring
+    ```
+- Collect current season automatically:
+    ```bash
+    make test-collect-anime-current-season
+    ```
+- Collect archive:
+    ```bash
+    make test-collect-anime-archive
+    ```
+
+## Environment Variables Reference
+
+Reference list of environment variables used for manual execution or custom configuration:
 
 | Variable                        | Used by             | Description                                                 |
-|---------------------------------|---------------------|-------------------------------------------------------------|
+|:--------------------------------|:--------------------|:------------------------------------------------------------|
 | `PORT`                          | all servers         | Port the server listens on                                  |
-| `DATABASE_URL`                  | application servers | JDBC URL for the server's mysql database                    |
+| `DATABASE_URL`                  | application servers | JDBC URL for the server's MySQL database                    |
 | `REDIS_HOST` / `REDIS_PASSWORD` | discovery server    | Redis connection used for the service registry              |
 | `DISCOVERY_SERVER_ENDPOINT`     | application servers | Base URL of the discovery server for heartbeats and lookups |
+| `MAL_CLIENT_ID`                 | mal-server          | MyAnimeList API Client ID                                   |
+| `MAL_COLLECTOR_GATEWAY_URL`     | frontend            | URL of the API Gateway for frontend requests                |
 
 ## License & Attribution
 
 This project is licensed under the **GNU General Public License v2.0 (GPL-2.0)** due to the usage of the
-[Mal4J](https://github.com/KatsuteDev/Mal4J) library wrapper. 
+[Mal4J](https://github.com/KatsuteDev/Mal4J) library wrapper.
 
 It is a derivative work based on [application-continuum](https://github.com/initialcapacity/application-continuum) by
 initialcapacity.
