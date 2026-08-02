@@ -10,7 +10,8 @@ FRONTEND_PORT := 3000
 
 .PHONY: all build start stop status restart \
         test-no-poll test-anime-by-id test-anime-by-season \
-        test-collect-by-ids test-collection-job-season test-collection-job-archive
+        test-collect-anime-by-ids test-collect-anime-by-season \
+        test-collect-anime-current-season test-collect-anime-archive
 
 all: build start
 
