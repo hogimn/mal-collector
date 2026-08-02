@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 export const ArchiveContainer = styled.div`
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 21px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -8,6 +8,7 @@ export const StyledSeasonTab = styled.div`
 `;
 
 export const SelectWrapper = styled.div`
+    margin-top: 16px;
     margin-bottom: 16px;
     text-align: left;
     .ant-select {
