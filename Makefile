@@ -102,19 +102,19 @@ restart: stop start
 test-no-poll:
 	@echo "==> Requesting GET http://localhost:8880/api/anime/no-poll (Accept: application/json) ..."
 	@curl -s -H "Accept: application/json" http://localhost:8880/api/anime/no-poll \
-	   | { jq --color-output 2>/dev/null || cat; }
+	   | { jq 2>/dev/null || cat; }
 
 test-anime-by-id:
 	@echo "==> Requesting GET http://localhost:8880/api/anime?id=$(id) ..."
 	@curl -s -H "Accept: application/json" \
 	   "http://localhost:8880/api/anime?id=$(id)" \
-	   | { jq --color-output 2>/dev/null || cat; }
+	   | { jq 2>/dev/null || cat; }
 
 test-anime-by-season:
 	@echo "==> Requesting GET http://localhost:8880/api/anime?year=$(year)&season=$(season) ..."
 	@curl -s -H "Accept: application/json" \
 	   "http://localhost:8880/api/anime?year=$(year)&season=$(season)" \
-	   | { jq --color-output 2>/dev/null || cat; }
+	   | { jq 2>/dev/null || cat; }
 
 # ==========================================
 # MAL Collector API Tests
@@ -126,18 +126,18 @@ test-collect-by-ids:
 	   -H "Accept: application/json" \
 	   -d '[$(ids)]' \
 	   http://localhost:8880/api/mal/anime/collection-job/ids \
-	   | { jq --color-output 2>/dev/null || cat; }
+	   | { jq 2>/dev/null || cat; }
 
 test-collection-job-season:
 	@echo "==> Requesting POST http://localhost:8880/api/mal/anime/collection-job?year=$(year)&season=$(season) ..."
 	@curl -s -X POST \
 	   -H "Accept: application/json" \
 	   "http://localhost:8880/api/mal/anime/collection-job?year=$(year)&season=$(season)" \
-	   | { jq --color-output 2>/dev/null || cat; }
+	   | { jq 2>/dev/null || cat; }
 
 test-collection-job-archive:
 	@echo "==> Requesting POST http://localhost:8880/api/mal/anime/collection-job/archive ..."
 	@curl -s -X POST \
 	   -H "Accept: application/json" \
 	   "http://localhost:8880/api/mal/anime/collection-job/archive" \
-	   | { jq --color-output 2>/dev/null || cat; }
+	   | { jq 2>/dev/null || cat; }
