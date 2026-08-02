@@ -5,6 +5,9 @@ SERVICES := \
   poll-server:8883:2:applications/poll-server/build/libs/poll-server.jar \
   mal-server:8885:1:applications/mal-server/build/libs/mal-server.jar
 
+FRONTEND_DIR := frontend
+FRONTEND_PORT := 3000
+
 .PHONY: all build start stop status restart \
         test-no-poll test-anime-by-id test-anime-by-season \
         test-collect-by-ids test-collection-job-season test-collection-job-archive
@@ -14,6 +17,8 @@ all: build start
 build:
 	@echo "==> Building runnable JARs..."
 	./gradlew clean build --parallel --configure-on-demand
+	@echo "==> Installing and Building Frontend..."
+	cd $(FRONTEND_DIR) && yarn install && yarn build
 
 start: stop
 	@echo ""
@@ -48,7 +53,9 @@ start: stop
 	   done; \
 	   if [ "$$name" = "discovery-server" ]; then sleep 3; fi; \
 	done
-	@echo "==> All servers started! Logs are saved in ./logs/"
+	@echo "Starting frontend on port $(FRONTEND_PORT)..."
+	@cd $(FRONTEND_DIR) && nohup yarn start > ../logs/frontend.log 2>&1 & echo $$! >> ../.pids
+	@echo "==> All servers and frontend started! Logs are saved in ./logs/"
 
 stop:
 	@echo ""
@@ -68,6 +75,7 @@ stop:
 	      PORTS="$$PORTS $$port/tcp"; \
 	   done; \
 	done; \
+	PORTS="$$PORTS $(FRONTEND_PORT)/tcp"; \
 	fuser -k $$PORTS 2>/dev/null || true
 	@echo "==> All servers stopped."
 	@echo ""
@@ -91,6 +99,8 @@ status:
 	      printf "%-22s | %-6s | %s\n" "$$inst_name" "$$port" "$$pid"; \
 	   done; \
 	done
+	@fe_pid=$$(fuser $(FRONTEND_PORT)/tcp 2>/dev/null || echo 'OFF'); \
+	printf "%-22s | %-6s | %s\n" "frontend" "$(FRONTEND_PORT)" "$$fe_pid"
 	@echo "------------------------------------------"
 	@echo ""
 
