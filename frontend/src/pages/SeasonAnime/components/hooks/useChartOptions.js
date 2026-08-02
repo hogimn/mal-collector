@@ -61,7 +61,6 @@ export const useChartOptions = ({
     }, [episodes, openEpisodeModal]);
 
     return useMemo(() => {
-        // 1. 기본 플러그인 객체 생성
         const chartPlugins = {
             tooltip: {
                 animation: {duration: 0},
