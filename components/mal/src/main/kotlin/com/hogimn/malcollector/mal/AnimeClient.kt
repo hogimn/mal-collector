@@ -55,6 +55,15 @@ class AnimeClient(
                     return@forEachIndexed
                 }
 
+                if (anime.meanRating.toInt() == 0) {
+                    logger.info(
+                        "Skipping anime '{}': Mean rating {} (expected: > 0)",
+                        anime.title,
+                        anime.meanRating.toInt()
+                    )
+                    return@forEachIndexed
+                }
+
                 upsertAnime(anime)
 
             } catch (e: Exception) {
@@ -70,6 +79,12 @@ class AnimeClient(
 
         if (anime.type.field() != "tv") {
             logger.info("Skipping anime '{}': Type {} (expected: tv)", anime.title, anime.type.field())
+            return
+        }
+
+        if (anime.meanRating.toInt() == 0) {
+            logger.info("Skipping anime '{}': Mean rating {} (expected: > 0)", anime.title, anime.meanRating.toInt())
+            return
         }
 
         upsertAnime(anime)
