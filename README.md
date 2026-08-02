@@ -1,4 +1,4 @@
-# Application Continuum
+# Application Continuum: MAL Collector
 
 The evolution of a component-based architecture
 
