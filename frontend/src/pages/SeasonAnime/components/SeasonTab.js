@@ -6,9 +6,7 @@ import {
     getCurrentSeasonYear,
     getNextSeasonFromSeason,
     getNextSeasonYearFromYearAndSeason,
-    getPreviousSeason,
     getPreviousSeasonFromSeason,
-    getPreviousSeasonYear,
     getPreviousSeasonYearFromYearAndSeason,
 } from "../../../utils/dateUtil";
 import CommonSelect from "../../../components/base/CommonSelect";
@@ -40,47 +38,68 @@ const getInitialFilters = () => {
 const SeasonTab = ({season, year}) => {
     const navigate = useNavigate();
 
-    const [activeTab, setActiveTab] = useState("2");
+    const [activeTab, setActiveTab] = useState("4");
     const [page, setPage] = useState(1);
 
     const [filters, setFilters] = useState(getInitialFilters);
     const {sortBy, filterBy} = filters;
 
     const seasonData = useMemo(() => {
-        if (season != null && year != null) {
-            return [
-                {
-                    season: getPreviousSeasonFromSeason(season),
-                    year: parseInt(getPreviousSeasonYearFromYearAndSeason(year, season), 10),
-                },
-                {season, year: parseInt(year, 10)},
-            ];
+        let baseSeason = season;
+        let baseYear = year;
+
+        if (baseSeason == null || baseYear == null) {
+            baseSeason = getCurrentSeason();
+            baseYear = getCurrentSeasonYear();
+        } else {
+            baseYear = parseInt(baseYear, 10);
         }
-        return [
-            {season: getPreviousSeason(), year: getPreviousSeasonYear()},
-            {season: getCurrentSeason(), year: getCurrentSeasonYear()},
-        ];
+
+        const seasons = [{season: baseSeason, year: baseYear}];
+
+        let currSeason = baseSeason;
+        let currYear = baseYear;
+        for (let i = 0; i < 3; i++) {
+            const prevS = getPreviousSeasonFromSeason(currSeason);
+            const prevY = parseInt(getPreviousSeasonYearFromYearAndSeason(currYear, currSeason), 10);
+            seasons.unshift({season: prevS, year: prevY});
+            currSeason = prevS;
+            currYear = prevY;
+        }
+
+        return seasons;
     }, [season, year]);
 
     const handleTabChange = useCallback(
         (key) => {
-            const currentTarget = seasonData[1];
+            const targetIndex = parseInt(key, 10) - 1;
 
-            if (key === "prev") {
-                const nextSeason = getPreviousSeasonFromSeason(currentTarget.season);
+            if (targetIndex >= 0 && targetIndex < seasonData.length) {
+                const target = seasonData[targetIndex];
+                navigate(`/season-anime?year=${target.year}&season=${target.season}`);
+                setPage(1);
+            } else if (key === "prev") {
+                const firstTarget = seasonData[0];
+                const nextSeason = getPreviousSeasonFromSeason(firstTarget.season);
                 const nextYear = getPreviousSeasonYearFromYearAndSeason(
-                    currentTarget.year,
-                    currentTarget.season
+                    firstTarget.year,
+                    firstTarget.season
                 );
                 navigate(`/season-anime?year=${nextYear}&season=${nextSeason}`);
                 setPage(1);
             } else if (key === "next") {
-                const nextSeason = getNextSeasonFromSeason(currentTarget.season);
+                const lastTarget = seasonData[seasonData.length - 1];
+                const nextSeason = getNextSeasonFromSeason(lastTarget.season);
                 const nextYear = getNextSeasonYearFromYearAndSeason(
-                    currentTarget.year,
-                    currentTarget.season
+                    lastTarget.year,
+                    lastTarget.season
                 );
                 navigate(`/season-anime?year=${nextYear}&season=${nextSeason}`);
+                setPage(1);
+            } else if (key === "current") {
+                const currentSeason = getCurrentSeason();
+                const currentYear = getCurrentSeasonYear();
+                navigate(`/season-anime?year=${currentYear}&season=${currentSeason}`);
                 setPage(1);
             } else if (key === "archive") {
                 navigate("/season-archive");
@@ -112,6 +131,7 @@ const SeasonTab = ({season, year}) => {
                 ),
             })),
             {key: "next", label: "...", content: null},
+            {key: "current", label: "Current", content: null},
             {key: "archive", label: "Archive", content: null},
         ];
     }, [seasonData, sortBy, filterBy, page, activeTab]);
@@ -171,7 +191,7 @@ const SeasonTab = ({season, year}) => {
 
             <CustomTabs
                 tabs={tabs}
-                defaultActiveKey="2"
+                defaultActiveKey="4"
                 activeKey={activeTab}
                 onChange={handleTabChange}
             />
