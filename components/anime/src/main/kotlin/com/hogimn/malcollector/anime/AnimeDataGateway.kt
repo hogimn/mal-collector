@@ -122,7 +122,7 @@ class AnimeDataGateway(val jdbcTemplate: JdbcTemplate) {
     }
 
     fun findByYearAndSeason(year: Int, season: String): List<AnimeRecord> {
-        val sql = "$selectSql where year = ? and season = ?"
+        val sql = "$selectSql where year = ? and season = ? order by score desc, members"
         return jdbcTemplate.findList(sql, ::mapRow, year, season)
     }
 
