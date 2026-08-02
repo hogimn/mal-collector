@@ -30,7 +30,7 @@ class AnimeClient(
     fun collectByYearAndSeason(year: Int, season: String) {
         logger.info("Start collecting $year/$season")
 
-        val animeList = findSeasonalAnime(year, season)
+        val animeList = findSeasonAnime(year, season)
         animeList.forEachIndexed { index, anime ->
             logger.info("[${index + 1}/${animeList.size}] Collecting anime for: ${anime.title}")
 
@@ -90,7 +90,7 @@ class AnimeClient(
 
     private fun fallback(): () -> Nothing? = { null }
 
-    private fun findSeasonalAnime(year: Int, season: String): List<Anime> {
+    private fun findSeasonAnime(year: Int, season: String): List<Anime> {
         var offset = 0
         val animeList = mutableListOf<Anime>()
 

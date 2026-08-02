@@ -33,7 +33,7 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
     fun collectByYearAndSeason(year: Int, season: String) {
         logger.info("Start collecting anime poll $year/$season")
 
-        val animeList = findSeasonalAnime(year, season) ?: return
+        val animeList = findSeasonAnime(year, season) ?: return
 
         logger.info("Found ${animeList.size} anime titles for $year/$season")
 
@@ -211,7 +211,7 @@ class AnimePollClient(val mapper: ObjectMapper, val template: RestTemplate, val 
         return forumTopics
     }
 
-    private fun findSeasonalAnime(year: Int, season: String): List<AnimeInfo>? {
+    private fun findSeasonAnime(year: Int, season: String): List<AnimeInfo>? {
         val params = listOf(Pair("year", year.toString()), Pair("season", season))
         return fetchAnimeData(params, object : TypeReference<List<AnimeInfo>>() {})
     }
