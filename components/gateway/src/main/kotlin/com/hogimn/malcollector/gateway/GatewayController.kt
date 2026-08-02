@@ -62,7 +62,7 @@ class GatewayController(
     }
 
     private fun handleCors(exchange: HttpExchange) {
-        exchange.responseHeaders.add("Access-Control-Allow-Origin", "http://localhost:5173")
+        exchange.responseHeaders.add("Access-Control-Allow-Origin", "http://localhost:3000")
         exchange.responseHeaders.add("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
         exchange.responseHeaders.add("Access-Control-Allow-Headers", "*")
         exchange.responseHeaders.add("Access-Control-Allow-Credentials", "true")
