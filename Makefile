@@ -129,7 +129,7 @@ test-anime-by-season:
 # ==========================================
 # MAL Collector API Tests
 # ==========================================
-test-collect-by-ids:
+test-collect-anime-by-ids:
 	@echo "==> Requesting POST http://localhost:8880/api/mal/anime/collection-job/ids ..."
 	@curl -s -X POST \
 	   -H "Content-Type: application/json" \
@@ -138,14 +138,14 @@ test-collect-by-ids:
 	   http://localhost:8880/api/mal/anime/collection-job/ids \
 	   | { jq 2>/dev/null || cat; }
 
-test-collect-by-season:
+test-collect-anime-by-season:
 	@echo "==> Requesting POST http://localhost:8880/api/mal/anime/collection-job?year=$(year)&season=$(season) ..."
 	@curl -s -X POST \
 	   -H "Accept: application/json" \
 	   "http://localhost:8880/api/mal/anime/collection-job?year=$(year)&season=$(season)" \
 	   | { jq 2>/dev/null || cat; }
 
-test-collect-current-season:
+test-collect-anime-current-season:
 	@YEAR=$$(date +%Y); \
 	MONTH=$$(date +%m); \
 	if [ $$MONTH -ge 1 ] && [ $$MONTH -le 3 ]; then SEASON="winter"; \
@@ -158,7 +158,7 @@ test-collect-current-season:
 	   "http://localhost:8880/api/mal/anime/collection-job?year=$$YEAR&season=$$SEASON" \
 	   | { jq 2>/dev/null || cat; }
 
-test-collect-archive:
+test-collect-anime-archive:
 	@echo "==> Requesting POST http://localhost:8880/api/mal/anime/collection-job/archive ..."
 	@curl -s -X POST \
 	   -H "Accept: application/json" \
