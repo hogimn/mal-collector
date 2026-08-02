@@ -7,7 +7,7 @@ build
 .DS_Store
 logs
 .pids
-.tags
+.tags*
 *.patch
 *.diff
 *.json
