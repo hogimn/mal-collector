@@ -6,3 +6,8 @@ build
 *.iws
 .DS_Store
 logs
+.pids
+.tags
+*.patch
+*.diff
+*.json
