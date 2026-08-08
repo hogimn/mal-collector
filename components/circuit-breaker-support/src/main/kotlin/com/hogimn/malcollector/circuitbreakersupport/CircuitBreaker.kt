@@ -9,6 +9,8 @@ class CircuitBreaker(
     private val maxFailures: Int = 3,
     private val retryIntervalInMillis: Long = 300
 ) {
+    private val logger = AppLoggerFactory.getLogger(javaClass)
+
     private var currentFailures: Int = 0
     private var lastFailureInMillis: Long = 0
 
@@ -26,6 +28,7 @@ class CircuitBreaker(
                 reset()
             }
         } catch (e: Exception) {
+            logger.error("Circuit breaker caught an exception, executing fallback. Cause: {}", e.message, e)
             fail()
             fallback()
         } finally {
