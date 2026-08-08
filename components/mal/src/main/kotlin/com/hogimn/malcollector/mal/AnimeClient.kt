@@ -104,8 +104,9 @@ class AnimeClient(
             return false
         }
 
-        if (anime.meanRating.toInt() == 0) {
-            logger.info("Skipping anime '{}': Mean rating {} (expected: > 0)", anime.title, anime.meanRating.toInt())
+        val rating = anime.meanRating?.toInt() ?: 0
+        if (rating == 0) {
+            logger.info("Skipping anime '{}': Mean rating is null or 0 (expected: > 0)", anime.title)
             return false
         }
 
