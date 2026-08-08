@@ -30,5 +30,6 @@ data class AnimeInfo(
     val largeImage: String,
     val rating: String,
     val nsfw: String,
+    val episodeDistribution: Map<Int, Map<String, Any>>? = null,
     val info: String? = null
 )
