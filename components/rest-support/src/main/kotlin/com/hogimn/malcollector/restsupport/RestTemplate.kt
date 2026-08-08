@@ -74,8 +74,8 @@ class RestTemplate {
             logger.info("[R] Received Response - Status: ${response.statusCode()}, Body: ${response.body()}")
         }
 
-        if (response.statusCode() !in 200..299) {
-            throw HttpServiceException(response.statusCode(), response.body())
+        if (response.statusCode() >= 300) {
+            return "status_code ${response.statusCode()} body ${response.body()}"
         }
 
         return response.body()

@@ -3,7 +3,6 @@ package com.hogimn.malcollector.gateway
 import AppLoggerFactory
 import com.hogimn.malcollector.discoverysupport.DiscoveryClient
 import com.hogimn.malcollector.restsupport.BasicController
-import com.hogimn.malcollector.restsupport.HttpServiceException
 import com.hogimn.malcollector.restsupport.RestTemplate
 import com.sun.net.httpserver.HttpExchange
 
@@ -47,14 +46,17 @@ class GatewayController(
                 else -> return false
             }
 
+            if (responseString.startsWith("status_code ")) {
+                val parts = responseString.split(" body ", limit = 2)
+                val statusCode = parts[0].removePrefix("status_code ").trim().toIntOrNull() ?: 500
+                val errorBody = if (parts.size > 1) parts[1] else ""
+
+                sendResponse(exchange, statusCode, errorBody)
+                return true
+            }
+
             sendResponse(exchange, 200, responseString)
             return true
-
-        } catch (e: HttpServiceException) {
-            logger.warn("Gateway Proxy Request Failed - Status: ${e.statusCode}")
-            sendResponse(exchange, e.statusCode, e.responseBody)
-            return true
-
         } catch (e: Exception) {
             logger.error("Gateway Routing Error: ${e.message}", e)
             return false
